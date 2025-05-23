@@ -1,0 +1,45 @@
+# Python artifacts
+
+**pycache**/
+\*.py\[cod]
+\*.pyo
+\*.pyd
+
+# Virtual environments
+
+.venv/
+venv/
+ENV/
+
+# Build & distribution
+
+build/
+dist/
+\*.egg-info/
+
+# Testing & coverage
+
+.pytest\_cache/
+.mypy\_cache/
+coverage/
+htmlcov/
+.coverage
+
+# Environment variables
+
+\*.env
+.env
+
+# Logs
+
+\*.log
+
+# IDE / editor configs
+
+.vscode/
+.idea/
+
+# Databases / misc
+
+\*.sqlite3
+\*.db
