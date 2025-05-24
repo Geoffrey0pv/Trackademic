@@ -1,5 +1,3 @@
-# file: app/models.py
-
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 
@@ -203,3 +201,37 @@ class SubjectRead(SQLModel):
     code: str
     name: str
     program_code: int
+
+class SubjectCreate(SQLModel):
+    code: str
+    name: str
+    program_code: int
+    # No se puede crear una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+class SubjectUpdate(SQLModel):
+    name: Optional[str] = Field(default=None, max_length=30)
+    program_code: Optional[int] = None
+    # No se puede actualizar una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+
+class GroupRead(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+class GroupCreate(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+class GroupUpdate(SQLModel):
+    number: Optional[int] = None
+    semester: Optional[str] = None
+    subject_code: Optional[str] = None
+    professor_id: Optional[str] = None
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")

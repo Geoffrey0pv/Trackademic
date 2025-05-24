@@ -1,12 +1,8 @@
 from fastapi import FastAPI
-from app.db.database import init_db
-from app.routers import employees # tus routers
+from app.routers import employees, subjects  # otros routers
 
-app = FastAPI(title="University API")
+app = FastAPI()
 
-# Crea tablas si no existen
-@app.on_event("startup")
-def on_startup():
-    init_db()
 
 app.include_router(employees.router, prefix="/employees", tags=["Employees"])
+app.include_router(subjects.router, prefix="/subjects", tags=["Subjects"]) 
