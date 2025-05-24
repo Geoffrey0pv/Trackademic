@@ -1,4 +1,4 @@
-# Trackademic – Setup Guide
+# Trackademic aplicación web poliglota
 
 ## Descripción del proyecto
 
@@ -14,16 +14,6 @@ El proyecto debe cumplir los Resultados de Aprendizaje (RA) del curso **SID II*
 * **RA3** – Transacciones e integridad en BD relacional (PostgreSQL).
 * **RA4** – Diseño y uso de BD NoSQL (MongoDB) justificando su aporte al sistema.
 
-### Objetivos específicos
-
-| # | Objetivo                                                           | Indicador de logro                      |
-| - | ------------------------------------------------------------------ | --------------------------------------- |
-| 1 | Crear un modelo relacional 3FN con reglas de negocio (Σ % = 100 %) | Constraints y trigger validados en psql |
-| 2 | Diseñar colecciones NoSQL optimizadas para lecturas de notas       | Índices compuestos en MongoDB ✔         |
-| 3 | Exponer API REST/JSON asincrónica documentada                      | FastAPI docs en /docs sin errores       |
-| 4 | Desarrollar UI React responsive con autenticación JWT              | Login funcional + dashboard saludable ✔ |
-| 5 | Entregar documentación y demo en < 10 min                          | README + video + diapositivas           |
-
 ## Requisitos previos
 
 | Herramienta    | Versión mínima          | Instalación                                    |
@@ -38,31 +28,53 @@ El proyecto debe cumplir los Resultados de Aprendizaje (RA) del curso **SID II*
 
 ## 1. Backend (FastAPI + SQLModel)
 
-### 1.1 Crear entorno virtual
+### 1.1 El primer paso es crear entorno virtual
 
 ```bash
+# Para crear el entorno virtual en ambos SO's
 python -m venv .venv
-# Linux/macOS
+
+# Para activar el entorno virtual en Linux/macOS
 source .venv/bin/activate
-# Windows
+# Para activar el entorno virtual en Windows
 .venv\Scripts\activate
 ```
 
-### 1.2 Instalar dependencias
+### 1.2 Segundo, una vez activado el entorno virtual instalar dependencias (asegurate que el archivo requirements.txt este al mismo nivel)
 
 ```bash
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 ```
 
-> **Dependencias principales:** `fastapi`, `uvicorn[standard]`, `sqlmodel`, `asyncpg`, `motor`, `python-dotenv`, `fastapi-users`.
+> **Ejemplo de algunas dependencias necesarias:** `fastapi`, `uvicorn[standard]`, `sqlmodel`, `asyncpg`, `motor`, `python-dotenv`, `fastapi-users`.
 
-### 1.3 Configurar variables de entorno
+### 1.3. Config De la DB (LOCAL)
 
-Copia `.env.example` a `.env` y ajusta credenciales:
+Creamos nuestra base de datos por consola (también se puede realizar desde pgAdmin) esta guia será desde la consola de powershell
+
+1. Nos conectamos como el superusuario postgres
+
 
 ```bash
-cp backend/.env.example backend/.env
+psql -U postgres -d postgres -h localhost -W
 ```
+
+2. Ya dentro de psql, creamos el rol y la base de datos de la aplicación:
+
+```bash
+CREATE ROLE trackadmin WITH LOGIN PASSWORD 'secret';
+CREATE DATABASE university OWNER trackadmin;
+\q
+```
+3. Ubicados en la carperta raiz del proyecto ejecutamos el siguiente comando del script DDL, para la creación de las tablas:
+
+```bash
+psql -U trackadmin -d university -f sql/university_schema_postgresql.sql
+```
+4. Para insertar los datos debemos ir al archivo en la dirección sql/university_full_data_postgresql.sql y copiamos todo el script, abrimos pg admin, 
+entramos al servidor y a la db **university** y selecionamos **Querytool** y vamos ejecutando uno por uno los inserts a cada tabla para evitar errors de violaciones de llaves foraneas
+
+5. Creamos un archivo .venv con las credenciales de acceso a la base de datos tanto para Postgres como para mongo
 
 ```env
 # backend/.env
@@ -71,7 +83,7 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=trackademic
 POSTGRES_USER=trackadmin
-POSTGRES_PASSWORD=secret
+POSTGRES_PASSWORD=trackademic
 
 # ---- MongoDB ----
 MONGO_URI=mongodb://localhost:27017
@@ -82,22 +94,9 @@ SECRET_KEY=change_me
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
-### 1.4 Crear base de datos PostgreSQL
+### 1.4 Ejecutar servidor de desarrollo
 
-```bash
-# entrar a psql como superusuario
-create user trackadmin with password 'secret';
-create database trackademic owner trackadmin;
-\q
-```
-
-> Habilita la extensión `uuid-ossp` si es requerida:
->
-> ```sql
-> CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-> ```
-
-### 1.5 Ejecutar servidor de desarrollo
+1. En la carpeta raiz nos movemos dentro de la carpeta backend y ejecutamos el comando para levantar el servidor de esta forma
 
 ```bash
 cd backend
@@ -117,31 +116,5 @@ npm run dev    # escucha en http://127.0.0.1:5173
 ```
 
 La aplicación llama al backend mediante la variable `VITE_API_URL` (ver `frontend/.env`).
-
----
-
-## 3. Estructura de carpetas
-
-```
-trackademic/
-├─ backend/
-│  ├─ app/
-│  │  ├─ main.py
-│  │  ├─ core/        # config, security
-│  │  ├─ db/          # database.py, base models
-│  │  ├─ models/      # SQLModel + Pydantic
-│  │  └─ routers/     # health, plan, activity, grade
-│  └─ requirements.txt
-├─ frontend/
-│  ├─ src/
-│  │  ├─ api/
-│  │  ├─ pages/
-│  │  ├─ components/
-│  │  └─ hooks/
-│  └─ package.json
-├─ sql/               # schema.sql, seeds
-├─ mongo/             # schema.md, seed.js
-└─ README.md          # este archivo
-```
 
 ---
