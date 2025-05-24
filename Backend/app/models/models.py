@@ -2,7 +2,6 @@
 
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from datetime import datetime
 
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
@@ -199,3 +198,8 @@ class EmployeeRead(SQLModel):
     faculty_code: int
     campus_code: int
     birth_place_code: int
+
+class SubjectRead(SQLModel):
+    code: str
+    name: str
+    program_code: int
