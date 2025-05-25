@@ -235,3 +235,21 @@ class GroupUpdate(SQLModel):
     professor_id: Optional[str] = None
     # subject: Subject = Relationship(back_populates="groups")
     # professor: Employee = Relationship(back_populates="groups")
+
+class ProfessorRead(SQLModel):
+    """Información básica del profesor"""
+    id: str
+    first_name: str
+    last_name: str
+    email: str
+    faculty_name: str
+    campus_name: str
+
+class SubjectWithProgramRead(SQLModel):
+    """Materia con información del programa"""
+    code: str
+    name: str
+    program_code: int
+    program_name: str
+    faculty_name: str
+
