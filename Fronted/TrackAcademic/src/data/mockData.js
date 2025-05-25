@@ -1,4 +1,4 @@
-// data/mockData.js
+// Datos mock para el dashboard académico
 
 export const semesters = [
   { id: 1, name: "Semestre 1", year: "2024", status: "completed" },
@@ -15,39 +15,9 @@ export const subjects = [
 ];
 
 export const grades = [
-  { 
-    subjectId: 1, 
-    completed: [4.2, 3.8, 4.5], 
-    pending: 1, 
-    minPassing: 3.0, 
-    weight: [0.2, 0.3, 0.3, 0.2] 
-  },
-  { 
-    subjectId: 2, 
-    completed: [2.8, 3.2, 3.5], 
-    pending: 1, 
-    minPassing: 3.0, 
-    weight: [0.25, 0.25, 0.25, 0.25] 
-  },
-  { 
-    subjectId: 3, 
-    completed: [4.5, 4.0], 
-    pending: 2, 
-    minPassing: 3.0, 
-    weight: [0.3, 0.3, 0.2, 0.2] 
-  },
-  { 
-    subjectId: 4, 
-    completed: [3.0, 3.7, 2.9], 
-    pending: 1, 
-    minPassing: 3.0, 
-    weight: [0.2, 0.3, 0.3, 0.2] 
-  },
-  { 
-    subjectId: 5, 
-    completed: [4.8], 
-    pending: 3, 
-    minPassing: 3.0, 
-    weight: [0.25, 0.25, 0.25, 0.25] 
-  },
+  { subjectId: 1, completed: [4.2, 3.8, 4.5], pending: 1, minPassing: 3.0, weight: [0.2, 0.3, 0.3, 0.2] },
+  { subjectId: 2, completed: [2.8, 3.2, 3.5], pending: 1, minPassing: 3.0, weight: [0.25, 0.25, 0.25, 0.25] },
+  { subjectId: 3, completed: [4.5, 4.0], pending: 2, minPassing: 3.0, weight: [0.3, 0.3, 0.2, 0.2] },
+  { subjectId: 4, completed: [3.0, 3.7, 2.9], pending: 1, minPassing: 3.0, weight: [0.2, 0.3, 0.3, 0.2] },
+  { subjectId: 5, completed: [4.8], pending: 3, minPassing: 3.0, weight: [0.25, 0.25, 0.25, 0.25] },
 ];

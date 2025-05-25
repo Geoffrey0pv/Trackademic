@@ -1,9 +1,9 @@
-// utils/academicUtils.js
+// Utilidades para cálculos de notas y estadísticas académicas
 
 /**
  * Calcula la nota necesaria para aprobar una materia
  * @param {number[]} completed - Notas completadas
- * @param {number} pending - Número de evaluaciones pendientes
+ * @param {number} pending - Evaluaciones pendientes
  * @param {number} minPassing - Nota mínima para aprobar
  * @param {number[]} weights - Pesos de cada evaluación
  * @returns {string} - Nota necesaria o "Imposible"
@@ -32,30 +32,25 @@ export function getCurrentAverage(completed, weights) {
  * Calcula el progreso de un semestre
  * @param {number} semesterId - ID del semestre
  * @param {Array} subjects - Array de materias
- * @param {Array} grades - Array de calificaciones
- * @returns {Object} - Objeto con progreso del semestre
+ * @param {Array} grades - Array de notas
+ * @returns {Object} - Objeto con passed, total y percentage
  */
 export function getSemesterProgress(semesterId, subjects, grades) {
   const subj = subjects.filter((s) => s.semester === semesterId);
   const total = subj.length;
   const passed = subj.filter((s) => {
     const g = grades.find((gr) => gr.subjectId === s.id);
-    if (!g || g.completed.length === 0) return false;
     const avg = parseFloat(getCurrentAverage(g.completed, g.weight));
     return avg >= g.minPassing;
   }).length;
-  return { 
-    passed, 
-    total, 
-    percentage: total > 0 ? Math.round((passed / total) * 100) : 0 
-  };
+  return { passed, total, percentage: Math.round((passed / total) * 100) };
 }
 
 /**
  * Calcula el GPA general
  * @param {Array} subjects - Array de materias
- * @param {Array} grades - Array de calificaciones
- * @returns {string} - GPA calculado
+ * @param {Array} grades - Array de notas
+ * @returns {string} - GPA general
  */
 export function getOverallGPA(subjects, grades) {
   let totalCredits = 0;
@@ -74,18 +69,41 @@ export function getOverallGPA(subjects, grades) {
 }
 
 /**
- * Obtiene datos comparativos por semestre
+ * Procesa datos de proyección para un semestre
+ * @param {number} semesterId - ID del semestre
+ * @param {Array} subjects - Array de materias
+ * @param {Array} grades - Array de notas
+ * @returns {Array} - Array de objetos con datos de proyección
+ */
+export function getProjectionData(semesterId, subjects, grades) {
+  return subjects
+    .filter((s) => s.semester === semesterId)
+    .map((s) => {
+      const g = grades.find((gr) => gr.subjectId === s.id);
+      const currentAvg = getCurrentAverage(g.completed, g.weight);
+      const needed = calculateNeededGrade(g.completed, g.pending, g.minPassing, g.weight);
+      return {
+        ...s,
+        currentAverage: currentAvg,
+        neededGrade: needed,
+        pendingEvaluations: g.pending,
+        status: parseFloat(currentAvg) >= g.minPassing ? "passing" : "at-risk"
+      };
+    });
+}
+
+/**
+ * Procesa datos comparativos por semestre
  * @param {Array} semesters - Array de semestres
  * @param {Array} subjects - Array de materias
- * @param {Array} grades - Array de calificaciones
- * @returns {Array} - Array con datos comparativos
+ * @param {Array} grades - Array de notas
+ * @returns {Array} - Array de objetos con datos comparativos
  */
 export function getComparativeData(semesters, subjects, grades) {
   return semesters.map(sem => {
     const semSubjects = subjects.filter(s => s.semester === sem.id);
     const averages = semSubjects.map(s => {
       const g = grades.find(gr => gr.subjectId === s.id);
-      if (!g || g.completed.length === 0) return 0;
       return parseFloat(getCurrentAverage(g.completed, g.weight));
     });
     const semesterAvg = averages.length > 0 ? averages.reduce((a, b) => a + b, 0) / averages.length : 0;
@@ -99,52 +117,19 @@ export function getComparativeData(semesters, subjects, grades) {
 }
 
 /**
- * Obtiene datos para proyección de notas
- * @param {number} selectedSemester - ID del semestre seleccionado
- * @param {Array} subjects - Array de materias
- * @param {Array} grades - Array de calificaciones
- * @returns {Array} - Array con datos de proyección
+ * Cuenta el total de evaluaciones pendientes
+ * @param {Array} grades - Array de notas
+ * @returns {number} - Total de evaluaciones pendientes
  */
-export function getProjectionData(selectedSemester, subjects, grades) {
-  return subjects
-    .filter((s) => s.semester === selectedSemester)
-    .map((s) => {
-      const g = grades.find((gr) => gr.subjectId === s.id);
-      if (!g) return null;
-      
-      const currentAvg = getCurrentAverage(g.completed, g.weight);
-      const needed = calculateNeededGrade(g.completed, g.pending, g.minPassing, g.weight);
-      return {
-        ...s,
-        currentAverage: currentAvg,
-        neededGrade: needed,
-        pendingEvaluations: g.pending,
-        status: parseFloat(currentAvg) >= g.minPassing ? "passing" : "at-risk"
-      };
-    })
-    .filter(Boolean);
+export function getTotalPendingEvaluations(grades) {
+  return grades.reduce((sum, g) => sum + g.pending, 0);
 }
 
 /**
- * Calcula estadísticas generales del dashboard
- * @param {Array} subjects - Array de materias
- * @param {Array} grades - Array de calificaciones
- * @returns {Object} - Objeto con estadísticas
+ * Cuenta las materias en riesgo
+ * @param {Array} projectionData - Datos de proyección
+ * @returns {number} - Número de materias en riesgo
  */
-export function getDashboardStats(subjects, grades) {
-  const totalPendingEvaluations = grades.reduce((sum, g) => sum + g.pending, 0);
-  
-  const atRiskSubjects = subjects.filter(subject => {
-    const grade = grades.find(g => g.subjectId === subject.id);
-    if (!grade || grade.completed.length === 0) return false;
-    const avg = parseFloat(getCurrentAverage(grade.completed, grade.weight));
-    return avg < grade.minPassing;
-  }).length;
-
-  return {
-    totalPendingEvaluations,
-    atRiskSubjects,
-    totalSubjects: subjects.length,
-    totalCredits: subjects.reduce((sum, s) => sum + s.credits, 0)
-  };
+export function getAtRiskSubjectsCount(projectionData) {
+  return projectionData.filter(s => s.status === "at-risk").length;
 }
