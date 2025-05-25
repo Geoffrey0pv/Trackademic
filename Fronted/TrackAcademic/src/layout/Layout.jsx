@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarDefault from "../components/Navbar";
 import EvaluationPlans from "../components/evaluationPlans/EvaluationPlans";
+import Dashboard from "../pages/Dashboard";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -14,7 +15,7 @@ const MainLayout = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <div className="p-8 text-gray-700 mt-40">Bienvenido al Dashboard</div>;
+        return <Dashboard />;
       case "planes":
         return <EvaluationPlans />;
       case "notas":
