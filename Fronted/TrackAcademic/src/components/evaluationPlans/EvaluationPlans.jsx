@@ -77,7 +77,7 @@ const EvaluationPlans = () => {
   const allCourses = [...new Set(plans.map(p => p.course))];
 
   return (
-    <div className="bg-gray from-blue-50 via-white to-white min-h-screen pb-12">
+    <div className="bg-gray from-blue-50 via-white to-white min-h-full pb-12 mt-10">
       <div className="w-full px-8 pt-8">
         <div className="bg-white rounded-xl shadow-md p-10">
           <div className="flex justify-between items-center mb-6">
