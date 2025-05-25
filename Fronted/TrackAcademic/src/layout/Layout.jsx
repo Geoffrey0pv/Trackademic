@@ -1,36 +1,34 @@
 import { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import NavbarDefault from "../components/Navbar";
-import Dashboard from "../pages/Dashboard";
-
+import EvaluationPlans from "../components/evaluationPlans/EvaluationPlans";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Aquí puedes agregar lógica de logout (limpiar tokens, etc.)
     navigate("/login");
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <Dashboard />;
+        return <div className="p-8 text-gray-700 mt-40">Bienvenido al Dashboard</div>;
       case "planes":
-        return <div>Planes de evaluación</div>;
+        return <EvaluationPlans />;
+      case "notas":
+        return <div className="p-8 text-gray-700 mt-40">Gestión de Notas</div>;
+      case "colaborar":
+        return <div className="p-8 text-gray-700 mt-40">Colaborar</div>;
       default:
-        return <Dashboard />;
+        return <div className="p-8 text-gray-700 mt-40">Página no encontrada</div>;
     }
   };
 
   return (
     <>
-      <NavbarDefault 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab}
-        onLogout={handleLogout}
-      />
+      <NavbarDefault activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
       <main style={{ paddingTop: "80px" }}>
         {renderTabContent()}
       </main>
