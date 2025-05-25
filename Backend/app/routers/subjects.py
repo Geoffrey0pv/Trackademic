@@ -27,6 +27,16 @@ async def list_subjects(
     else:
         return await service.get_all(skip, limit)
 
+"""  
+Obtenemos la lista de materias por programa y el código de la materia y el semestre
+"""
+@router.get("/all", response_model=List[SubjectRead])
+async def list_all_subjects(
+    service: SubjectService = Depends(get_subject_service)
+):
+    """Listar todas las materias"""
+    return await service.get_all()
+
 @router.get("/{subject_code}", response_model=SubjectRead)
 async def get_subject(
     subject_code: str,
