@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 
-const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
+const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel }) => {
   const [title, setTitle] = useState('');
   const [course, setCourse] = useState('');
-  const [components, setComponents] = useState([{ name: '', weight: '', count: '' }]);
+  const [components, setComponents] = useState([]);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title);
+      setCourse(initialData.course);
+      setComponents(initialData.components);
+    }
+  }, [initialData]);
 
   const totalWeight = components.reduce((acc, curr) => acc + parseFloat(curr.weight || 0), 0);
 
@@ -22,7 +30,8 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
   };
 
   const removeComponent = (index) => {
-    setComponents(components.filter((_, i) => i !== index));
+    const updated = components.filter((_, i) => i !== index);
+    setComponents(updated);
   };
 
   const validate = () => totalWeight === 100;
@@ -38,7 +47,7 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
 
   return (
     <div className="p-6 bg-white shadow rounded">
-      <h2 className="text-lg font-bold mb-4">Nuevo Plan de Evaluación</h2>
+      <h2 className="text-lg font-bold mb-4">Editar Plan de Evaluación</h2>
       <input
         className="border p-2 mb-2 w-full"
         placeholder="Título"
@@ -89,8 +98,7 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
           onClick={addComponent}
           className="text-purple-600 flex items-center mb-4 hover:text-purple-700"
         >
-          <PlusCircleIcon className="w-5 h-5 mr-1" />
-          Agregar Componente
+          <PlusCircleIcon className="w-5 h-5 mr-1" /> Agregar Componente
         </button>
       )}
 
@@ -104,11 +112,11 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
           onClick={handleSubmit}
           className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
         >
-          Guardar
+          Guardar Cambios
         </button>
       </div>
     </div>
   );
 };
 
-export default EvaluationPlanForm;
+export default EditEvaluationPlanForm;
