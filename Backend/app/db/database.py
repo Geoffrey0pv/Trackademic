@@ -1,9 +1,11 @@
-# file: app/db/database.py
+# app/db/database.py
 
-from sqlmodel import SQLModel, create_engine
-from functools import lru_cache
-#  ↓ CAMBIADO ↓
+from sqlmodel import SQLModel
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession   # <-- aquí
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from functools import lru_cache
 
 class Settings(BaseSettings):
     POSTGRES_HOST: str
@@ -12,7 +14,6 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
 
-    # indica dónde buscar el .env
     model_config = SettingsConfigDict(env_file=".env")
 
     @property
@@ -28,19 +29,25 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     return Settings()
 
-# Motor síncrono (solo para init_db)
-engine = create_engine(
+# Motor síncrono para init_db
+sync_engine = create_engine(
     get_settings().db_url.replace("+asyncpg", ""),
     echo=True
 )
 
-# Motor asíncrono para usar en la app
-async_engine = create_engine(
+# Motor asíncrono (AsyncEngine) para la app
+async_engine: AsyncEngine = create_async_engine(
     get_settings().db_url,
-    echo=True,
-    connect_args={"timeout": 10}
+    echo=True
+)
+
+# Fábrica de sesiones asíncronas
+async_session = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 def init_db():
-    import app.models  # importa tus modelos SQLModel
-    SQLModel.metadata.create_all(engine)
+    import app.models
+    SQLModel.metadata.create_all(sync_engine)

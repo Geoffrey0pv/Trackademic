@@ -1,6 +1,6 @@
 from typing import List, Optional
 from sqlmodel import select
-from sqlmodel import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi import HTTPException, status
 
 from app.models.models import Subject, Group, Employee

@@ -1,6 +1,7 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
 
+
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
     __tablename__ = "countries"
@@ -221,6 +222,7 @@ class GroupRead(SQLModel):
     professor_id: str
     # subject: Subject = Relationship(back_populates="groups")
     # professor: Employee = Relationship(back_populates="groups")
+
 class GroupCreate(SQLModel):
     number: int
     semester: str
@@ -228,6 +230,7 @@ class GroupCreate(SQLModel):
     professor_id: str
     # subject: Subject = Relationship(back_populates="groups")
     # professor: Employee = Relationship(back_populates="groups")
+
 class GroupUpdate(SQLModel):
     number: Optional[int] = None
     semester: Optional[str] = None
@@ -252,4 +255,40 @@ class SubjectWithProgramRead(SQLModel):
     program_code: int
     program_name: str
     faculty_name: str
+
+class GroupDetailRead(SQLModel):
+    """Grupo con información completa del profesor y materia"""
+    number: int
+    semester: str
+    subject_code: str
+    subject_name: str
+    professor_id: str
+    professor_name: str
+    professor_email: str
+    program_name: str
+    faculty_name: str
+
+class ProgramRead(SQLModel):
+    """Información básica del programa"""
+    code: int
+    name: str
+    area_code: int
+    area_name: str
+    faculty_name: str
+
+class FacultyRead(SQLModel):
+    """Información básica de la facultad"""
+    code: int
+    name: str
+    location: str
+    phone_number: str
+    dean_id: Optional[str] = None
+    dean_name: Optional[str] = None
+
+class CampusRead(SQLModel):
+    """Información básica del campus"""
+    code: int
+    name: Optional[str] = None
+    city_code: int
+    city_name: str
 
