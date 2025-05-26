@@ -296,7 +296,8 @@ class CampusRead(SQLModel):
 class Artifact(BaseModel):
     name: str
     grade_decimal: float
-
+ 
+######MONGO DB ##############
 class EvaluationPlanBase(BaseModel):
     name: str
     subject_id: int
@@ -309,3 +310,31 @@ class EvaluationPlanCreate(EvaluationPlanBase):
 
 class EvaluationPlan(EvaluationPlanBase):
     id: str = Field(..., alias="_id") 
+
+class Derivable(BaseModel):
+    name: str
+    grade_decimal: float
+    grade_value: float
+
+class GradesBase(BaseModel):
+    user_id: str
+    group_id: int
+    subject_id: int
+    semester: str
+    min_passing: float
+    derivables: List[Derivable]
+
+class GradesCreate(GradesBase):
+    pass
+
+class Grades(GradesBase):
+    id: str = Field(..., alias="_id")
+class CommentsBase(BaseModel):
+    commenter_id: int
+    content: str
+
+class Comments(CommentsBase):
+    id: str=Field(...,alias="_id")
+
+class CommentsCreate(CommentsBase):
+    pass

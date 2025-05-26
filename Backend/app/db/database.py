@@ -7,6 +7,9 @@ from functools import lru_cache
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
 import os
+from typing import AsyncGenerator
+
+
 
 #load_dotenv()
 
@@ -55,6 +58,11 @@ async_session = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
+
+##Necesario para inyectar las dependencias dentro de los endpoints
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session() as session:
+        yield session
 
 def init_db():
     import app.models  # importa todos tus modelos SQLModel
