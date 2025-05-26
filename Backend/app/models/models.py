@@ -1,8 +1,6 @@
-# file: app/models.py
-
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from datetime import datetime
+
 
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
@@ -199,3 +197,98 @@ class EmployeeRead(SQLModel):
     faculty_code: int
     campus_code: int
     birth_place_code: int
+
+class SubjectRead(SQLModel):
+    code: str
+    name: str
+    program_code: int
+
+class SubjectCreate(SQLModel):
+    code: str
+    name: str
+    program_code: int
+    # No se puede crear una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+class SubjectUpdate(SQLModel):
+    name: Optional[str] = Field(default=None, max_length=30)
+    program_code: Optional[int] = None
+    # No se puede actualizar una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+
+class GroupRead(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class GroupCreate(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class GroupUpdate(SQLModel):
+    number: Optional[int] = None
+    semester: Optional[str] = None
+    subject_code: Optional[str] = None
+    professor_id: Optional[str] = None
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class ProfessorRead(SQLModel):
+    """Información básica del profesor"""
+    id: str
+    first_name: str
+    last_name: str
+    email: str
+    faculty_name: str
+    campus_name: str
+
+class SubjectWithProgramRead(SQLModel):
+    """Materia con información del programa"""
+    code: str
+    name: str
+    program_code: int
+    program_name: str
+    faculty_name: str
+
+class GroupDetailRead(SQLModel):
+    """Grupo con información completa del profesor y materia"""
+    number: int
+    semester: str
+    subject_code: str
+    subject_name: str
+    professor_id: str
+    professor_name: str
+    professor_email: str
+    program_name: str
+    faculty_name: str
+
+class ProgramRead(SQLModel):
+    """Información básica del programa"""
+    code: int
+    name: str
+    area_code: int
+    area_name: str
+    faculty_name: str
+
+class FacultyRead(SQLModel):
+    """Información básica de la facultad"""
+    code: int
+    name: str
+    location: str
+    phone_number: str
+    dean_id: Optional[str] = None
+    dean_name: Optional[str] = None
+
+class CampusRead(SQLModel):
+    """Información básica del campus"""
+    code: int
+    name: Optional[str] = None
+    city_code: int
+    city_name: str
+
