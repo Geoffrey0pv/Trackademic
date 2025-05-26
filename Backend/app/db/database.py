@@ -4,6 +4,17 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+import os
+
+#load_dotenv()
+
+#MONGO_URI = os.getenv("MONGO_URI")
+MONGO_URI="mongodb+srv://lingangun:intensivos2@cluster0.r7tdovm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+mongo_client = AsyncIOMotorClient(MONGO_URI)
+mongo_db = mongo_client["TrackAcademic"]
+
 
 class Settings(BaseSettings):
     # Usa una única variable de entorno DATABASE_URL

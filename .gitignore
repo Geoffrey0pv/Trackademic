@@ -3,8 +3,8 @@
 venv/
 
 # Node
-node_modules/
+Frontend/TrackAcademic/node_modules/
 
 # Builds
-dist/
-build/
+Frontend/TrackAcademic/dist/
+Frontend/TrackAcademic/build/

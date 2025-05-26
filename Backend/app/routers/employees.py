@@ -12,10 +12,6 @@ def get_employee_service(session: AsyncSession = Depends(get_session)) -> Employ
     """Factory function para crear instancia de EmployeeService"""
     return EmployeeService(session)
 
-# ==============================================
-# ENDPOINTS CRUD BÁSICOS
-# ==============================================
-
 @router.get("/", response_model=List[EmployeeRead])
 async def list_employees(
     skip: int = Query(0, ge=0, description="Number of records to skip"),

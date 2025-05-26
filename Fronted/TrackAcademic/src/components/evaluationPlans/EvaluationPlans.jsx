@@ -3,30 +3,10 @@ import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon } from '@heroicons/react
 import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
-
-const initialPlans = [
-  {
-    id: 1,
-    title: 'Plan de Evaluación - 2025-1',
-    course: 'Bases de Datos',
-    components: [
-      { name: 'Evaluación 1', weight: 10, count: 1 },
-      { name: 'Evaluación 2', weight: 20, count: 1 },
-      { name: 'Evaluación 3', weight: 20, count: 1 },
-      { name: 'Proyecto Entrega 1', weight: 10, count: 1 },
-      { name: 'Quiz MER', weight: 10, count: 1 },
-      { name: 'Proyecto Entrega 2', weight: 10, count: 1 },
-      { name: 'Proyecto Entrega 3', weight: 10, count: 1 },
-      { name: 'Quiz SQL', weight: 10, count: 1 },
-    ],
-    comments: [
-      { user: 'Camila R.', text: 'Buen equilibrio.', date: '2025-05-01' },
-    ],
-  },
-];
+import api from "../../utils/api";
 
 const EvaluationPlans = () => {
-  const [plans, setPlans] = useState(initialPlans);
+  const [plans, setPlans] = useState();
   const [search, setSearch] = useState('');
   const [course, setCourse] = useState('');
   const [selected, setSelected] = useState(null);
@@ -39,9 +19,14 @@ const EvaluationPlans = () => {
     (course === '' || p.course === course)
   );
 
-  const handleAdd = (plan) => {
-    setPlans([...plans, { ...plan, id: Date.now(), comments: [] }]);
-    setShowForm(false);
+  const handleAdd = async (plan) => {
+    try {
+      const response = await api.post('/evaluation-plans', plan);
+      console.log("Plan added successfully:", response.data)
+    } catch (error) {
+      console.error("Error adding plan:", error);
+    }
+
   };
 
   const handleEdit = (plan) => {

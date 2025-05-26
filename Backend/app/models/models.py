@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
+from pydantic import BaseModel, Field
 
 
 # Tablas independientes (sin foreign keys)
@@ -292,3 +293,19 @@ class CampusRead(SQLModel):
     city_code: int
     city_name: str
 
+class Artifact(BaseModel):
+    name: str
+    grade_decimal: float
+
+class EvaluationPlanBase(BaseModel):
+    name: str
+    subject_id: int
+    creator_id: int
+    semester: str
+    artifacts: List[Artifact]
+
+class EvaluationPlanCreate(EvaluationPlanBase):
+    pass
+
+class EvaluationPlan(EvaluationPlanBase):
+    id: str = Field(..., alias="_id") 
