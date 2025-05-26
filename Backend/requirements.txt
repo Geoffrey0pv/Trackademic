@@ -1,20 +1,20 @@
 fastapi[all]
 uvicorn
 sqlmodel
-asyncpg
 motor
+asyncpg
 python-dotenv
 fastapi-users
 passlib
 python-jose
 email-validator
 pydantic
+pydantic-settings
+psycopg2-binary
+
+# Dev & Testing
 black
 ruff
 pytest
 pytest-asyncio
 httpx
-python-dotenv
-pydantic-settings
-psycopg2
-asyncpg

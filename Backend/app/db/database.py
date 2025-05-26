@@ -22,10 +22,16 @@ mongo_db = mongo_client["TrackAcademic"]
 class Settings(BaseSettings):
     # Usa una única variable de entorno DATABASE_URL
     database_url: str
+    mongo_uri: str
+    mongo_db: str
+    secret_key: str
+    access_token_expire_minutes: int
+
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix=""
+        env_prefix="",
+        extra="allow"
     )
 
     @property

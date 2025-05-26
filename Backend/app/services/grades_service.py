@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorCollection
 from datetime import datetime
 from app.models.models import Grades, GradesCreate
 from app.utils.mongo_helpers import to_object_id
-from db.database import mongo_db  # para access a evaluationPlan
+from app.db.database import mongo_db  # para access a evaluationPlan
 
 class GradesService:
     def __init__(self, collection: AsyncIOMotorCollection):

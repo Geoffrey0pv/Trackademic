@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from bson.errors import InvalidId
-from db.database import mongo_db
+from app.db.database import mongo_db
 from app.models.models import EvaluationPlan, EvaluationPlanCreate
 from app.services.evaluation_plan_service import EvaluationPlanService
 

@@ -1,13 +1,14 @@
+from __future__ import annotations
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
     __tablename__ = "countries"
     
-    code: int = Field(primary_key=True)
+    code: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(max_length=20)
     
     # Relaciones
@@ -38,7 +39,7 @@ class Department(SQLModel, table=True):
     country_code: int = Field(foreign_key="countries.code")
     
     # Relaciones
-    country: Country = Relationship(back_populates="departments")
+    country: Optional[Country] = Relationship(back_populates="departments")
     cities: List["City"] = Relationship(back_populates="department")
 
 class City(SQLModel, table=True):

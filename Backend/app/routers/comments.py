@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from app.models.models import Comments, CommentsCreate
-from db.database import mongo_db
+from app.db.database import mongo_db
 from app.services.comments_service import CommentsService
 from bson.errors import InvalidId
 

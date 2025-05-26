@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
-from db.database import mongo_db, get_session
+from app.db.database import mongo_db, get_session
 from app.models.models import Grades, GradesCreate
 from app.utils.mongo_helpers import to_object_id
 from app.services.subject_service import SubjectService
