@@ -18,6 +18,7 @@ MONGO_URI="mongodb+srv://lingangun:intensivos2@cluster0.r7tdovm.mongodb.net/?ret
 mongo_client = AsyncIOMotorClient(MONGO_URI)
 mongo_db = mongo_client["TrackAcademic"]
 
+'''
 
 class Settings(BaseSettings):
     # Usa una única variable de entorno DATABASE_URL
@@ -73,3 +74,5 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 def init_db():
     import app.models  # importa todos tus modelos SQLModel
     SQLModel.metadata.create_all(sync_engine)
+
+    '''

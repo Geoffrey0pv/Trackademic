@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
-import api from "../../utils/api";
+import {getEvaluationPlans, createEvaluationPlan, deleteEvaluationPlan, getEvaluationPlanById, updateEvaluationPlan } from '../../services/evaluationPlanServices';
+import api from '../../services/api';
 
 const EvaluationPlans = () => {
   const [plans, setPlans] = useState();
@@ -13,6 +14,20 @@ const EvaluationPlans = () => {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await getEvaluationPlans();
+        setPlans(response);
+      } catch (error) {
+        console.error("Error fetching evaluation plans:", error);
+      }
+    }
+
+    fetchPlans();
+  }, []);
+
+
   const filteredPlans = plans.filter(p =>
     (p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.course.toLowerCase().includes(search.toLowerCase())) &&
@@ -21,8 +36,12 @@ const EvaluationPlans = () => {
 
   const handleAdd = async (plan) => {
     try {
-      const response = await api.post('/evaluation-plans', plan);
-      console.log("Plan added successfully:", response.data)
+      const newPlan = await createEvaluationPlan(plan);
+      setPlans([...plans, newPlan]);
+      setShowForm(false);
+      setSelected(null);
+      setEditing(false);
+      console.log("Plan added successfully:", newPlan);
     } catch (error) {
       console.error("Error adding plan:", error);
     }
