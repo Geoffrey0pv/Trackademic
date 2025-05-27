@@ -25,6 +25,14 @@ async def create_comment(
 async def get_comments(service: CommentsService = Depends(get_comments_service)):
     return await service.get_all()
 
+@router.get("/by-plan/{plan_id}", response_model=list[Comments])
+async def get_comments_by_plan(plan_id: str, service: CommentsService = Depends(get_comments_service)):
+    try:
+        return await service.get_by_plan(plan_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid evaluation_plan_id format")
+
+
 @router.get("/{comment_id}", response_model=Comments)
 async def get_comment(comment_id: str, service: CommentsService = Depends(get_comments_service)):
     comment = await service.get_by_id(comment_id)
@@ -50,9 +58,3 @@ async def delete_comment(comment_id: str, service: CommentsService = Depends(get
         raise HTTPException(status_code=404, detail="Comment not found")
     return {"message": "Deleted successfully"}
 
-@router.get("/by-plan/{plan_id}", response_model=list[Comments])
-async def get_comments_by_plan(plan_id: str, service: CommentsService = Depends(get_comments_service)):
-    try:
-        return await service.get_by_plan(plan_id)
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid evaluation_plan_id format")

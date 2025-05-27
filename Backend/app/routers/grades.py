@@ -37,6 +37,26 @@ async def create_grade(
 async def get_grades(service: GradesService = Depends(get_grades_service)):
     return await service.get_all()
 
+@router.get("/by-user/{user_id}", response_model=list[Grades])
+async def get_grades_by_user(user_id: str, service: GradesService = Depends(get_grades_service)):
+    return await service.get_by_user(user_id)
+
+@router.get("/projection/{user_id}/{subject_id}")
+async def get_needed_grade(user_id: str, subject_id: int, service: GradesService = Depends(get_grades_service)):
+    result = await service.get_needed_grade(user_id, subject_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="No grades found for user and subject")
+    return result
+
+@router.get("/semester-consolidate/{user_id}/{semester}")
+async def get_consolidated_grades(user_id: str, semester: str, service: GradesService = Depends(get_grades_service)):
+    return await service.get_semester_consolidate(user_id, semester)
+
+@router.get("/comparative/{user_id}")
+async def comparative_analysis(user_id: str, service: GradesService = Depends(get_grades_service)):
+    return await service.comparative_analysis(user_id)
+
+
 @router.get("/{grade_id}", response_model=Grades)
 async def get_grade(grade_id: str, service: GradesService = Depends(get_grades_service)):
     grade = await service.get_by_id(grade_id)
@@ -58,21 +78,3 @@ async def delete_grade(grade_id: str, service: GradesService = Depends(get_grade
         raise HTTPException(status_code=404, detail="Grade not found")
     return {"message": "Deleted successfully"}
 
-@router.get("/by-user/{user_id}", response_model=list[Grades])
-async def get_grades_by_user(user_id: str, service: GradesService = Depends(get_grades_service)):
-    return await service.get_by_user(user_id)
-
-@router.get("/projection/{user_id}/{subject_id}")
-async def get_needed_grade(user_id: str, subject_id: int, service: GradesService = Depends(get_grades_service)):
-    result = await service.get_needed_grade(user_id, subject_id)
-    if result is None:
-        raise HTTPException(status_code=404, detail="No grades found for user and subject")
-    return result
-
-@router.get("/semester-consolidate/{user_id}/{semester}")
-async def get_consolidated_grades(user_id: str, semester: str, service: GradesService = Depends(get_grades_service)):
-    return await service.get_semester_consolidate(user_id, semester)
-
-@router.get("/comparative/{user_id}")
-async def comparative_analysis(user_id: str, service: GradesService = Depends(get_grades_service)):
-    return await service.comparative_analysis(user_id)

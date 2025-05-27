@@ -31,6 +31,16 @@ async def obtain_all_plans(service: EvaluationPlanService = Depends(get_plan_ser
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/search", response_model=List[EvaluationPlan])
+async def search_plans(
+    semester: Optional[str] = Query(None),
+    subject_id: Optional[int] = Query(None),
+    service: EvaluationPlanService = Depends(get_plan_service)
+):
+    return await service.search(semester, subject_id)
+
+
 @router.get("/{plan_id}", response_model=EvaluationPlan)
 async def obtain_plan(plan_id: str, service: EvaluationPlanService = Depends(get_plan_service)):
     try:
@@ -54,11 +64,3 @@ async def delete_plan(plan_id: str, service: EvaluationPlanService = Depends(get
     if not deleted:
         raise HTTPException(status_code=404, detail="Plan not found")
     return {"message": "Deleted successfully"}
-
-@router.get("/search", response_model=List[EvaluationPlan])
-async def search_plans(
-    semester: Optional[str] = Query(None),
-    subject_id: Optional[int] = Query(None),
-    service: EvaluationPlanService = Depends(get_plan_service)
-):
-    return await service.search(semester, subject_id)

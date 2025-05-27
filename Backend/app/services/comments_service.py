@@ -17,7 +17,7 @@ class CommentsService:
         doc["evaluation_plan_id"] = to_object_id(evaluation_plan_id)
         doc["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(doc)
-        return await self.get_by_id(result.inserted_id)
+        return self.serialize(await self.get_by_id(result.inserted_id), "_id")
 
     async def get_all(self) -> List[Comments]:
         cursor = self.collection.find()
@@ -49,6 +49,7 @@ class CommentsService:
             if field in doc:
                 if field.startswith("_"):
                     doc[field[1:]] = str(doc[field])
+                    del doc[field]
                 else:
                     doc[field] = str(doc[field])
         return doc

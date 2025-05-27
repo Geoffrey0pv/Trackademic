@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import employees, subjects, groups, academic, evaluations_plan,grades,comments
+from app.routers import employees, subjects, groups, academic, evaluations_plan,grades,comments, students
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -28,3 +28,4 @@ app.include_router(groups.router, prefix="/groups", tags=["Groups"])
 app.include_router(evaluations_plan.router, prefix="/evaluation-plans", tags=["Evaluation Plans"])
 app.include_router(grades.router, prefix="/grades", tags=["Grades"])
 app.include_router(comments.router, prefix="/comments", tags=["Comments"])
+app.include_router(students.router, prefix="/students", tags=["Students"])

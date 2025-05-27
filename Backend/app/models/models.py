@@ -347,3 +347,7 @@ class StudentCreate(StudentBase):
 
 class Student(StudentBase):
     id: str
+
+class LoginInput(BaseModel):
+    username: str
+    password: str

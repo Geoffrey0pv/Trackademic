@@ -15,7 +15,7 @@ class EvaluationPlanService:
         doc = plan.model_dump(by_alias=True)
         doc["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(doc)
-        return await self.get_by_id(result.inserted_id)
+        return self.serialize(await self.get_by_id(result.inserted_id), "_id")
 
 
     async def get_by_id(self, id: str | ObjectId) -> Optional[EvaluationPlan]:
@@ -61,6 +61,7 @@ class EvaluationPlanService:
             if field in doc:
                 if field.startswith("_"):
                     doc[field[1:]] = str(doc[field])
+                    del doc[field]
                 else:
                     doc[field] = str(doc[field])
         return doc

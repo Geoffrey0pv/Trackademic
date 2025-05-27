@@ -1,62 +1,44 @@
 import api from '../../utils/api';
 
-export const getEvaluationPlans = async () => {
+const handleRequest = async (requestFn) => {
   try {
-    const response = await api.get('/evaluation-plans');
+    const response = await requestFn();
     return response.data;
   } catch (error) {
-    console.error("Error fetching evaluation plans:", error);
-    throw error;
+    const message =
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Error desconocido en la API";
+    console.error("API Error:", message);
+    throw new Error(message);
   }
-}
+};
 
-export const createEvaluationPlan = async (plan) => {
-  try {
-    const response = await api.post('/evaluation-plans', plan);
-    return response.data;
-  } catch (error) {
-    console.error("Error creating evaluation plan:", error);
-    throw error;
-  }
-}
 
-export const updateEvaluationPlan = async (id, updatedPlan) => {
-    try {
-        const response = await api.put(`/evaluation-plans/${id}`, updatedPlan);
-        return response.data;
-    } catch (error) {
-        console.error("Error updating evaluation plan:", error);
-        throw error;
-    }
-}
+export const getEvaluationPlans = () =>
+  handleRequest(() => api.get('/evaluation-plans'));
 
-export const deleteEvaluationPlan = async (id) => {
-    try {
-        const response = await api.delete(`/evaluation-plans/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error deleting evaluation plan:", error);
-        throw error;
-    }
-}
 
-export const getEvaluationPlanById = async (id) => {
-    try {
-        const response = await api.get(`/evaluation-plans/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching evaluation plan by ID:", error);
-        throw error;
-    }
-}
+export const getEvaluationPlanById = (id) =>
+  handleRequest(() => api.get(`/evaluation-plans/${id}`));
 
-export const addCommentToPlan = async (id, comment) => {
-    try {
-        const response = await api.post(`/evaluation-plans/${id}/comments`, comment);
-        return response.data;
-    } catch (error) {
-        console.error("Error adding comment to evaluation plan:", error);
-        throw error;
-    }
-}
 
+export const createEvaluationPlan = (plan) =>
+  handleRequest(() => api.post('/evaluation-plans', plan));
+
+
+export const updateEvaluationPlan = (id, updatedPlan) =>
+  handleRequest(() => api.put(`/evaluation-plans/${id}`, updatedPlan));
+
+
+export const deleteEvaluationPlan = (id) =>
+  handleRequest(() => api.delete(`/evaluation-plans/${id}`));
+
+export const searchEvaluationPlans = (semester, subjectId) => {
+  const params = {};
+  if (semester) params.semester = semester;
+  if (subjectId) params.subject_id = subjectId;
+  return handleRequest(() =>
+    api.get('/evaluation-plans/search', { params })
+  );
+};

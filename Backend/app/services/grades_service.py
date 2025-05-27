@@ -17,7 +17,7 @@ class GradesService:
         doc = grade.model_dump(by_alias=True)
         doc["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(doc)
-        return await self.get_by_id(result.inserted_id)
+        return self.serialize(await self.get_by_id(result.inserted_id), "_id", "user_id")
 
     async def get_all(self) -> List[Grades]:
         cursor = self.collection.find()
