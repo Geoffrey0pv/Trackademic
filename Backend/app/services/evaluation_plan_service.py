@@ -1,4 +1,3 @@
-# app/services/evaluation_plan_service.py
 
 from typing import List, Optional
 from bson import ObjectId
@@ -18,13 +17,21 @@ class EvaluationPlanService:
         result = await self.collection.insert_one(doc)
         return await self.get_by_id(result.inserted_id)
 
+
     async def get_by_id(self, id: str | ObjectId) -> Optional[EvaluationPlan]:
         doc = await self.collection.find_one({"_id": to_object_id(id)})
-        return self.serialize(doc) if doc else None
+        return self.serialize(doc, "_id") if doc else None
 
     async def get_all(self) -> List[EvaluationPlan]:
         cursor = self.collection.find()
-        return [self.serialize(doc async for doc in cursor)]
+        results = []
+
+        async for doc in cursor:
+            serialized_doc = self.serialize(doc, "_id", "creator_id")
+            results.append(serialized_doc)
+
+        return results
+
 
     async def search(self, semester: Optional[str], subject_id: Optional[int]) -> List[EvaluationPlan]:
         query = {}
@@ -33,7 +40,8 @@ class EvaluationPlanService:
         if subject_id is not None:
             query["subject_id"] = subject_id
         cursor = self.collection.find(query)
-        return [self.serialize(doc async for doc in cursor)]
+        return [self.serialize(doc, "_id") async for doc in cursor]
+    
 
     async def update(self, id: str, plan: EvaluationPlanCreate) -> Optional[EvaluationPlan]:
         await self.collection.update_one(
@@ -42,10 +50,19 @@ class EvaluationPlanService:
         )
         return await self.get_by_id(id)
 
+
     async def delete(self, id: str) -> bool:
         result = await self.collection.delete_one({"_id": to_object_id(id)})
         return result.deleted_count == 1
+    
 
-    def serialize(self, doc):
-        doc["_id"] = str(doc["_id"])
+    def serialize(self, doc, *fields):
+        for field in fields:
+            if field in doc:
+                if field.startswith("_"):
+                    doc[field[1:]] = str(doc[field])
+                else:
+                    doc[field] = str(doc[field])
         return doc
+
+

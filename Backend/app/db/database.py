@@ -11,23 +11,16 @@ from typing import AsyncGenerator
 
 
 
-#load_dotenv()
+load_dotenv()
 
-#MONGO_URI = os.getenv("MONGO_URI")
-MONGO_URI="mongodb+srv://lingangun:intensivos2@cluster0.r7tdovm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = os.getenv("MONGO_URI")
+#MONGO_URI="mongodb+srv://lingangun:intensivos2@cluster0.r7tdovm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 mongo_client = AsyncIOMotorClient(MONGO_URI)
-mongo_db = mongo_client["TrackAcademic"]
-
-'''
+mongo_db = mongo_client.get_database("TrackAcademic")
 
 class Settings(BaseSettings):
     # Usa una única variable de entorno DATABASE_URL
     database_url: str
-    mongo_uri: str
-    mongo_db: str
-    secret_key: str
-    access_token_expire_minutes: int
-
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -74,5 +67,3 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 def init_db():
     import app.models  # importa todos tus modelos SQLModel
     SQLModel.metadata.create_all(sync_engine)
-
-    '''

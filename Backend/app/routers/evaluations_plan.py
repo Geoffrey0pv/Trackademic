@@ -8,7 +8,7 @@ from app.services.evaluation_plan_service import EvaluationPlanService
 router = APIRouter()
 
 def get_plan_service():
-    return EvaluationPlanService(mongo_db["evaluationPlan"])
+    return EvaluationPlanService(mongo_db.get_collection("evaluationPlan"))
 
 @router.post("/", response_model=EvaluationPlan, status_code=201)
 async def create_evaluation_plan(
@@ -25,7 +25,11 @@ async def create_evaluation_plan(
 
 @router.get("/", response_model=List[EvaluationPlan])
 async def obtain_all_plans(service: EvaluationPlanService = Depends(get_plan_service)):
-    return await service.get_all()
+    try:
+        plans = await service.get_all()
+        return plans
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{plan_id}", response_model=EvaluationPlan)
 async def obtain_plan(plan_id: str, service: EvaluationPlanService = Depends(get_plan_service)):

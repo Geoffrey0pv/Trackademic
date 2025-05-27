@@ -21,11 +21,12 @@ class GradesService:
 
     async def get_all(self) -> List[Grades]:
         cursor = self.collection.find()
-        return [self.serialize(doc async for doc in cursor)]
+        return [self.serialize(doc, "_id", "user_id") async for doc in cursor]
+    
 
     async def get_by_id(self, id: str | ObjectId) -> Optional[Grades]:
         doc = await self.collection.find_one({"_id": to_object_id(id)})
-        return self.serialize(doc) if doc else None
+        return self.serialize(doc, "_id") if doc else None
 
     async def update(self, id: str, grade: GradesCreate) -> Optional[Grades]:
         await self.collection.update_one(
@@ -40,7 +41,7 @@ class GradesService:
 
     async def get_by_user(self, user_id: str) -> List[Grades]:
         cursor = self.collection.find({"user_id": to_object_id(user_id)})
-        return [self.serialize(doc async for doc in cursor)]
+        return [self.serialize(doc, "_id") async for doc in cursor]
 
     async def get_needed_grade(self, user_id: str, subject_id: int):
         doc = await self.collection.find_one({"user_id": to_object_id(user_id), "subject_id": subject_id})
@@ -135,6 +136,11 @@ class GradesService:
             for sem, data in data_by_semester.items()
         ]
 
-    def serialize(self, doc):
-        doc["_id"] = str(doc["_id"])
+    def serialize(self, doc, *fields):
+        for field in fields:
+            if field in doc:
+                if field.startswith("_"):
+                    doc[field[1:]] = str(doc[field])
+                else:
+                    doc[field] = str(doc[field])
         return doc

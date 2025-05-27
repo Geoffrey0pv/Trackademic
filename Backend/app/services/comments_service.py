@@ -21,15 +21,15 @@ class CommentsService:
 
     async def get_all(self) -> List[Comments]:
         cursor = self.collection.find()
-        return [self.serialize(doc async for doc in cursor)]
+        return [self.serialize(doc, "_id") async for doc in cursor]
 
     async def get_by_plan(self, evaluation_plan_id: str) -> List[Comments]:
         cursor = self.collection.find({"evaluation_plan_id": to_object_id(evaluation_plan_id)})
-        return [self.serialize(doc async for doc in cursor)]
+        return [self.serialize(doc, "_id") async for doc in cursor]
 
     async def get_by_id(self, id: str | ObjectId) -> Optional[Comments]:
         doc = await self.collection.find_one({"_id": to_object_id(id)})
-        return self.serialize(doc) if doc else None
+        return self.serialize(doc, "_id") if doc else None
 
     async def update(self, id: str, comment: CommentsCreate) -> Optional[Comments]:
         result = await self.collection.update_one(
@@ -44,6 +44,11 @@ class CommentsService:
         result = await self.collection.delete_one({"_id": to_object_id(id)})
         return result.deleted_count == 1
 
-    def serialize(self, doc) -> dict:
-        doc["_id"] = str(doc["_id"])
+    def serialize(self, doc, *fields):
+        for field in fields:
+            if field in doc:
+                if field.startswith("_"):
+                    doc[field[1:]] = str(doc[field])
+                else:
+                    doc[field] = str(doc[field])
         return doc

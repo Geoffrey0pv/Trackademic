@@ -1,5 +1,3 @@
-# file: app/db/session.py
-
 from typing import AsyncGenerator
 from sqlmodel.ext.asyncio.session import AsyncSession
 
