@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-
+from pydantic import BaseModel
 
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
@@ -292,3 +292,62 @@ class CampusRead(SQLModel):
     city_code: int
     city_name: str
 
+##MONGODB####
+
+class Artifact(BaseModel):
+    name: str
+    grade_decimal: float
+ 
+class EvaluationPlanBase(BaseModel):
+    name: str
+    creator_id: str
+    artifacts: List[Artifact]
+
+class EvaluationPlanCreate(EvaluationPlanBase):
+    pass
+
+class EvaluationPlan(EvaluationPlanBase):
+    id: str
+
+class Derivable(BaseModel):
+    name: str
+    grade_decimal: float
+    grade_value: float
+
+class GradesBase(BaseModel):
+    user_id: str
+    min_passing: Optional [float] = None
+    derivables: List[Derivable]
+
+class GradesCreate(GradesBase):
+    pass
+
+class Grades(GradesBase):
+    id: str
+
+class CommentsBase(BaseModel):
+    commenter_id: int
+    content: str
+
+class Comments(CommentsBase):
+    id: str
+
+class CommentsCreate(CommentsBase):
+    pass
+
+class StudentBase(BaseModel):
+    first_name: str
+    last_name: str
+    username: str
+    password: str
+
+class StudentCreate(StudentBase):
+    pass
+
+
+class Student(StudentBase):
+    id: str
+
+class LoginInput(BaseModel):
+    username: str
+    password: str
