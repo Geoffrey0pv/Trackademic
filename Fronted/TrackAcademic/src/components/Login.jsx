@@ -1,24 +1,36 @@
-// src/components/Login.jsx
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/UserContext";
+import {loginStudent} from "../services/studentServices";
 
 export default function Login({ onLogin }) {
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const {setUser} = useContext(UserContext);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
-        if (!email || !password) {
-        setError("Todos los campos son obligatorios.");
+        if (!username || !password) {
+            setError("Todos los campos son obligatorios.");
         return;
         }
-
-        // Lógica de autenticación simulada (puedes reemplazar con llamada a API)
-        onLogin({ email, password });
+        try {
+            const user = await loginStudent(username, password);
+            if (user) {
+            setUser(user);
+            } else {
+            setError("Credenciales incorrectas.");
+            }
+        } catch (error) {
+            setError("Error de conexión.");
+        }
+        
+       
+        onLogin({ username, password });
     };
 
     return (
@@ -29,13 +41,13 @@ export default function Login({ onLogin }) {
         {error && <p className="text-red-500 mb-4 text-sm text-center">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-            <label className="block text-gray-600 mb-1" htmlFor="email">Correo electrónico</label>
+            <label className="block text-gray-600 mb-1" htmlFor="username">Nombre de Usuario</label>
             <input
-                id="email"
-                type="email"
+                id="username"
+                type="username"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
             />
             </div>
 

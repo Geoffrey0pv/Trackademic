@@ -4,7 +4,6 @@ import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
 import {getEvaluationPlans, createEvaluationPlan, deleteEvaluationPlan, getEvaluationPlanById, updateEvaluationPlan } from '../../services/evaluationPlanServices';
-import api from '../../services/api';
 
 const EvaluationPlans = () => {
   const [plans, setPlans] = useState();

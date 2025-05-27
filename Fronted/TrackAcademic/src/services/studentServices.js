@@ -1,4 +1,4 @@
-import api from '../../utils/api';
+import api from '../utils/api';
 
 const handleRequest = async (requestFn) => {
   try {
@@ -14,10 +14,23 @@ const handleRequest = async (requestFn) => {
   }
 };
 
-export const loginStudent = (username, password) =>
-  handleRequest(() =>
-    api.post('/students/login', { username, password })
-  );
+export const loginStudent = async (username, password) => {
+  try {
+    const user = await handleRequest(() =>
+      api.post('/students/login', { username, password })
+    );
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      return user;
+    } else {
+      console.error("Error en el login:", response);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error en la petición:", error);
+    return null;
+  }
+};
 
 export const createStudent = (student) =>
   handleRequest(() =>

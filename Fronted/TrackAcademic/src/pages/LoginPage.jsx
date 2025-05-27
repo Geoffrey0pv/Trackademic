@@ -2,8 +2,9 @@
 import Login from "../components/Login";
 
 export default function LoginPage() {
-  const handleLogin = ({ email, password }) => {
-    console.log("Login intentado con:", email, password);
+  const handleLogin = ({ username, password }) => {
+    console.log("Login intentado con:", username, password);
+
   };
 
   return (
