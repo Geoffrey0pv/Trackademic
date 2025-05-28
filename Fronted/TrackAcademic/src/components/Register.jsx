@@ -9,11 +9,12 @@ import {
   UserPlus
 } from 'lucide-react';
 import { createStudent } from '../services/studentServices';
+import { useNavigate } from 'react-router-dom';
 
 const Register = ({ onRegister }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     username: '',
     password: '',
     confirmPassword: ''
@@ -22,12 +23,13 @@ const Register = ({ onRegister }) => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) newErrors.firstName = 'El nombre es requerido';
-    if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es requerido';
+    if (!formData.first_name.trim()) newErrors.firstName = 'El nombre es requerido';
+    if (!formData.last_name.trim()) newErrors.lastName = 'El apellido es requerido';
     if (!formData.username.trim()) newErrors.username = 'El correo es requerido';
     if (!formData.password) newErrors.password = 'La contraseña es requerida';
     if (formData.password.length < 6)
@@ -48,8 +50,17 @@ const Register = ({ onRegister }) => {
     setIsLoading(true);
 
     try {
-      const response = await createStudent(formData);
-      onRegister(response.data); // Notifica al padre que se registró correctamente
+      const { confirmPassword, ...dataToSend } = formData;
+      const response = await createStudent(dataToSend);
+      onRegister(response);
+      navigate('/login', { replace: true });
+      setFormData({
+        first_name: '',
+        last_name: '',
+        username: '',
+        password: '',
+        confirmPassword: ''
+      });
     } catch (error) {
       console.error('Error al registrar:', error);
       setErrors({ apiError: 'Error al registrar. Intenta nuevamente.' });
@@ -96,39 +107,39 @@ const Register = ({ onRegister }) => {
           <div className="grid grid-cols-2 gap-4">
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="firs_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Nombre
               </label>
               <div className="relative">
                 <input
-                  id="firstName"
-                  name="firstName"
+                  id="first_name"
+                  name="first_name"
                   type="text"
                   required
-                  value={formData.firstName}
+                  value={formData.first_name}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 pl-11 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder-gray-500 ${
-                    errors.firstName ? 'border-red-300' : 'border-gray-300'
+                    errors.first_name ? 'border-red-300' : 'border-gray-300'
                   }`}
                   placeholder="Juan"
                 />
                 <User className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
               </div>
-              {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
+              {errors.first_mame && <p className="text-red-500 text-xs mt-1">{errors.first_name}</p>}
             </div>
 
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Apellido
               </label>
               <div className="relative">
                 <input
-                  id="lastName"
-                  name="lastName"
+                  id="last_name"
+                  name="last_name"
                   type="text"
                   required
-                  value={formData.lastName}
+                  value={formData.last_name}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 pl-11 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder-gray-500 ${
                     errors.lastName ? 'border-red-300' : 'border-gray-300'
@@ -137,7 +148,7 @@ const Register = ({ onRegister }) => {
                 />
                 <User className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
               </div>
-              {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
+              {errors.last_name && <p className="text-red-500 text-xs mt-1">{errors.last_name}</p>}
             </div>
           </div>
 
@@ -157,7 +168,7 @@ const Register = ({ onRegister }) => {
                 className={`w-full px-4 py-3 pl-11 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 placeholder-gray-500 ${
                   errors.username ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="ejemplo@correo.com"
+                placeholder="user"
               />
               <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
             </div>

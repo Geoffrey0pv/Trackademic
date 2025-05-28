@@ -2,11 +2,13 @@
 import Register from "../components/Register";
 
 export default function RegisterPage() {
-
+  const handleRegister = (studentData) => {
+    console.log("Registro intentado con:", studentData);
+  }
 
   return (
     <div>
-      <Register />
+      <Register onRegister={handleRegister} />
     </div>
   );
 }

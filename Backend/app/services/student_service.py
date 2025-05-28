@@ -27,8 +27,9 @@ class StudentService:
             raise ValueError("Password is required")
         if not doc["password"]:
             raise ValueError("Password cannot be empty")
-      
-        if self.collection.find_one({"username": doc["username"]}):
+          
+        existing_user = await self.collection.find_one({"username": doc["username"]})
+        if existing_user:
             raise ValueError("Username already exists")
         
 
