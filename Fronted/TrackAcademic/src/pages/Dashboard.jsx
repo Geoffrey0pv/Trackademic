@@ -9,11 +9,11 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Componentes
-import StatsCard from "../components/StatsCards";
-import ReportTabs from "../components/ReportTabs";
-import ProjectionReport from "../components/ProjectionReport";
-import ComparativeReport from "../components/ComparativeReport";
-import ProgressReport from "../components/ProgressReport";
+import StatsCard from "../components/dashboard/StatsCards";
+import ReportTabs from "../components/dashboard/ReportTabs";
+import ProjectionReport from "../components/dashboard/ProjectionReport";
+import ComparativeReport from "../components/dashboard/ComparativeReport";
+import ProgressReport from "../components/dashboard/ProgressReport";
 
 // Datos y utilidades
 import { semesters, subjects, grades } from "../data/mockData";
