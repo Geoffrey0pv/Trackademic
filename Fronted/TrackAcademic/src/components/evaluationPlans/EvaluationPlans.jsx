@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react';
-import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import {
+  PencilIcon,
+  TrashIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
+} from '@heroicons/react/24/outline';
+
 import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
+
 import {
   getEvaluationPlans,
   createEvaluationPlan,
   deleteEvaluationPlan,
   updateEvaluationPlan
 } from '../../services/evaluationPlanServices.js';
+
 import {
   getCommentsByPlan,
   createComment
 } from '../../services/commentServices.js';
+
+import { getAllSubjects } from '../../services/subjectServices.js';
 
 const EvaluationPlans = () => {
   const [plans, setPlans] = useState([]);
@@ -24,19 +35,28 @@ const EvaluationPlans = () => {
   const [loading, setLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchPlansAndSubjects = async () => {
       try {
-        const response = await getEvaluationPlans();
+        const [planRes, subjectRes] = await Promise.all([
+          getEvaluationPlans(),
+          getAllSubjects()
+        ]);
+
+        const subjectMap = subjectRes.reduce((acc, s) => {
+          acc[s.code] = s.name;
+          return acc;
+        }, {});
 
         const mapped = await Promise.all(
-          response.map(async (p) => {
+          planRes.map(async (p) => {
             const comments = await getCommentsByPlan(p.id);
             return {
               ...p,
               title: p.name,
-              course: "Asignatura",
+              course: subjectMap[p.subject_code] || 'Asignatura',
               comments: comments.map(c => ({
                 user: c.author || 'Anónimo',
                 text: c.content,
@@ -52,14 +72,15 @@ const EvaluationPlans = () => {
         );
 
         setPlans(mapped);
+        setCourses(subjectRes.map(s => s.name));
       } catch (error) {
-        console.error("Error fetching evaluation plans:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlans();
+    fetchPlansAndSubjects();
   }, []);
 
   const filteredPlans = plans.filter(p =>
@@ -71,20 +92,17 @@ const EvaluationPlans = () => {
   const handleAdd = async (plan) => {
     try {
       const newPlan = await createEvaluationPlan(plan);
-      setPlans([
-        ...plans,
-        {
-          ...newPlan,
-          title: newPlan.name,
-          course: "Asignatura",
-          comments: [],
-          components: newPlan.artifacts.map(a => ({
-            name: a.name,
-            weight: (a.grade_decimal * 100).toFixed(0),
-            count: 1
-          }))
-        }
-      ]);
+      setPlans([...plans, {
+        ...newPlan,
+        title: newPlan.name,
+        course: "Asignatura",
+        comments: [],
+        components: newPlan.artifacts.map(a => ({
+          name: a.name,
+          weight: (a.grade_decimal * 100).toFixed(0),
+          count: 1
+        }))
+      }]);
       setShowForm(false);
       setSelected(null);
       setEditing(false);
@@ -134,14 +152,11 @@ const EvaluationPlans = () => {
   const handleComment = async (id, text) => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      await createComment(
-        {
-          content: text,
-          author: user?.username || 'Anónimo',
-          commenter_id: user?.id || null,
-        },
-        id
-      );
+      await createComment({
+        content: text,
+        author: user?.username || 'Anónimo',
+        commenter_id: user?.id || null,
+      }, id);
 
       const comments = await getCommentsByPlan(id);
       setPlans(plans =>
@@ -164,8 +179,6 @@ const EvaluationPlans = () => {
     }
   };
 
-  const allCourses = [...new Set(plans.map(p => p.course))];
-
   return (
     <div className="bg-gray from-blue-50 via-white to-white min-h-full pb-12 mt-10">
       <div className="w-full px-8 pt-8">
@@ -185,7 +198,7 @@ const EvaluationPlans = () => {
             course={course}
             setSearch={setSearch}
             setCourse={setCourse}
-            courses={allCourses}
+            courses={courses}
           />
 
           <div className="mt-4 space-y-6">
