@@ -22,7 +22,17 @@ const CommentSection = ({ comments = [], onAdd }) => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Escribe un comentario..."
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (text.trim()) {
+              onAdd(text);
+              setText('');
+            }
+          }
+        }}
       />
+
       <button
         onClick={() => {
           if (text.trim()) {
