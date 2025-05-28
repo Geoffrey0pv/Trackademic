@@ -1,6 +1,6 @@
 import React from "react";
 import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { getSemesterProgress, getCurrentAverage } from "../utils/gradeCalculation";
+import { getSemesterProgress, getCurrentAverage } from "../../utils/gradeCalculation";
 
 /**
  * Componente del reporte de progreso detallado
