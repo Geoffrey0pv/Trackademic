@@ -1,95 +1,165 @@
-# file: app/routers/employees.py
-
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlmodel import select
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.db.session import get_session
-from app.models.models import Employee, EmployeeCreate, EmployeeRead, EmployeeUpdate
+from app.services.employee_service import EmployeeService
+from app.models.models import EmployeeRead, EmployeeCreate, EmployeeUpdate
 
 router = APIRouter()
 
+def get_employee_service(session: AsyncSession = Depends(get_session)) -> EmployeeService:
+    """Factory function para crear instancia de EmployeeService"""
+    return EmployeeService(session)
+
+# ==============================================
+# ENDPOINTS CRUD BÁSICOS
+# ==============================================
+
 @router.get("/", response_model=List[EmployeeRead])
 async def list_employees(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
-    session: AsyncSession = Depends(get_session)
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of records to return"),
+    faculty_code: Optional[int] = Query(None, description="Filter by faculty"),
+    employee_type: Optional[str] = Query(None, description="Filter by employee type"),
+    contract_type: Optional[str] = Query(None, description="Filter by contract type"),
+    campus_code: Optional[int] = Query(None, description="Filter by campus"),
+    search: Optional[str] = Query(None, description="Search by name, email or ID"),
+    service: EmployeeService = Depends(get_employee_service)
 ):
-    """Obtener todos los empleados con paginación"""
-    result = await session.exec(select(Employee).offset(skip).limit(limit))
-    return result.all()
+    """
+    Listar empleados con filtros opcionales
+    
+    - **skip**: Número de registros a omitir (para paginación)
+    - **limit**: Número máximo de registros a retornar
+    - **faculty_code**: Filtrar por código de facultad
+    - **employee_type**: Filtrar por tipo de empleado
+    - **contract_type**: Filtrar por tipo de contrato
+    - **campus_code**: Filtrar por código de campus
+    - **search**: Buscar por nombre, apellido, email o ID
+    """
+    if search:
+        return await service.search_employees(search)
+    else:
+        return await service.get_employees_with_filters(
+            faculty_code=faculty_code,
+            employee_type=employee_type,
+            contract_type=contract_type,
+            campus_code=campus_code,
+            skip=skip,
+            limit=limit
+        )
 
 @router.get("/{employee_id}", response_model=EmployeeRead)
-async def get_employee(employee_id: str, session: AsyncSession = Depends(get_session)):
-    """Obtener un empleado por ID"""
-    result = await session.exec(select(Employee).where(Employee.id == employee_id))
-    employee = result.first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    return employee
+async def get_employee(
+    employee_id: str = Path(..., description="Employee ID"),
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """Obtener un empleado específico por ID"""
+    return await service.get_by_id_or_fail(employee_id)
 
-@router.post("/", response_model=EmployeeRead)
-async def create_employee(employee_data: EmployeeCreate, session: AsyncSession = Depends(get_session)):
-    """Crear un nuevo empleado"""
-    # Verificar si el ID ya existe
-    existing = await session.exec(select(Employee).where(Employee.id == employee_data.id))
-    if existing.first():
-        raise HTTPException(status_code=400, detail="Employee ID already exists")
+@router.post("/", response_model=EmployeeRead, status_code=201)
+async def create_employee(
+    employee_data: EmployeeCreate,
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """
+    Crear un nuevo empleado
     
-    employee = Employee(**employee_data.dict())
-    session.add(employee)
-    await session.commit()
-    await session.refresh(employee)
-    return employee
+    Valida automáticamente:
+    - Que el ID no esté duplicado
+    - Que existan la facultad, campus, ciudad de nacimiento
+    - Que existan los tipos de contrato y empleado
+    """
+    return await service.create(employee_data)
 
 @router.put("/{employee_id}", response_model=EmployeeRead)
 async def update_employee(
-    employee_id: str, 
-    employee_data: EmployeeUpdate, 
-    session: AsyncSession = Depends(get_session)
+    employee_id: str = Path(..., description="Employee ID"),
+    employee_data: EmployeeUpdate = ...,
+    service: EmployeeService = Depends(get_employee_service)
 ):
-    """Actualizar un empleado"""
-    result = await session.exec(select(Employee).where(Employee.id == employee_id))
-    employee = result.first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
+    """
+    Actualizar un empleado existente
     
-    # Actualizar solo los campos proporcionados
-    update_data = employee_data.dict(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(employee, field, value)
-    
-    await session.commit()
-    await session.refresh(employee)
-    return employee
+    Solo actualiza los campos proporcionados (partial update)
+    """
+    return await service.update(employee_id, employee_data)
 
 @router.delete("/{employee_id}")
-async def delete_employee(employee_id: str, session: AsyncSession = Depends(get_session)):
+async def delete_employee(
+    employee_id: str = Path(..., description="Employee ID"),
+    service: EmployeeService = Depends(get_employee_service)
+):
     """Eliminar un empleado"""
-    result = await session.exec(select(Employee).where(Employee.id == employee_id))
-    employee = result.first()
-    if not employee:
-        raise HTTPException(status_code=404, detail="Employee not found")
-    
-    await session.delete(employee)
-    await session.commit()
+    await service.delete(employee_id)
     return {"message": "Employee deleted successfully"}
+
+# ==============================================
+# ENDPOINTS ESPECIALIZADOS
+# ==============================================
 
 @router.get("/by-faculty/{faculty_code}", response_model=List[EmployeeRead])
 async def get_employees_by_faculty(
-    faculty_code: int, 
-    session: AsyncSession = Depends(get_session)
+    faculty_code: int = Path(..., description="Faculty code"),
+    service: EmployeeService = Depends(get_employee_service)
 ):
-    """Obtener empleados por facultad"""
-    result = await session.exec(select(Employee).where(Employee.faculty_code == faculty_code))
-    return result.all()
+    """Obtener todos los empleados de una facultad específica"""
+    return await service.get_employees_by_faculty(faculty_code)
 
 @router.get("/by-type/{employee_type}", response_model=List[EmployeeRead])
 async def get_employees_by_type(
-    employee_type: str, 
-    session: AsyncSession = Depends(get_session)
+    employee_type: str = Path(..., description="Employee type"),
+    service: EmployeeService = Depends(get_employee_service)
 ):
-    """Obtener empleados por tipo"""
-    result = await session.exec(select(Employee).where(Employee.employee_type == employee_type))
-    return result.all()
+    """Obtener empleados por tipo (ej: 'Profesor', 'Administrativo')"""
+    return await service.get_employees_by_type(employee_type)
+
+@router.get("/by-contract/{contract_type}", response_model=List[EmployeeRead])
+async def get_employees_by_contract_type(
+    contract_type: str = Path(..., description="Contract type"),
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """Obtener empleados por tipo de contrato"""
+    return await service.get_employees_by_contract_type(contract_type)
+
+@router.get("/by-campus/{campus_code}", response_model=List[EmployeeRead])
+async def get_employees_by_campus(
+    campus_code: int = Path(..., description="Campus code"),
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """Obtener empleados por campus"""
+    return await service.get_employees_by_campus(campus_code)
+
+@router.get("/professors/all", response_model=List[EmployeeRead])
+async def get_all_professors(
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """Obtener solo los empleados que son profesores"""
+    return await service.get_professors_only()
+
+# ==============================================
+# ENDPOINTS DE REPORTES Y ESTADÍSTICAS
+# ==============================================
+
+@router.get("/reports/count-by-faculty", response_model=List[dict])
+async def get_employee_count_by_faculty(
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """
+    Obtener reporte de cantidad de empleados por facultad
+    
+    Retorna: [{"faculty_name": "Ingeniería", "employee_count": 25}, ...]
+    """
+    return await service.get_employee_count_by_faculty()
+
+@router.get("/reports/count-by-type", response_model=List[dict])
+async def get_employee_count_by_type(
+    service: EmployeeService = Depends(get_employee_service)
+):
+    """
+    Obtener reporte de cantidad de empleados por tipo
+    
+    Retorna: [{"employee_type": "Profesor", "count": 150}, ...]
+    """
+    return await service.get_employee_count_by_type()

@@ -1,8 +1,6 @@
-# file: app/models.py
-
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from datetime import datetime
+from pydantic import BaseModel
 
 # Tablas independientes (sin foreign keys)
 class Country(SQLModel, table=True):
@@ -199,3 +197,157 @@ class EmployeeRead(SQLModel):
     faculty_code: int
     campus_code: int
     birth_place_code: int
+
+class SubjectRead(SQLModel):
+    code: str
+    name: str
+    program_code: int
+
+class SubjectCreate(SQLModel):
+    code: str
+    name: str
+    program_code: int
+    # No se puede crear una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+class SubjectUpdate(SQLModel):
+    name: Optional[str] = Field(default=None, max_length=30)
+    program_code: Optional[int] = None
+    # No se puede actualizar una materia sin un programa existente
+    # program: Program = Relationship(back_populates="subjects")
+
+class GroupRead(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class GroupCreate(SQLModel):
+    number: int
+    semester: str
+    subject_code: str
+    professor_id: str
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class GroupUpdate(SQLModel):
+    number: Optional[int] = None
+    semester: Optional[str] = None
+    subject_code: Optional[str] = None
+    professor_id: Optional[str] = None
+    # subject: Subject = Relationship(back_populates="groups")
+    # professor: Employee = Relationship(back_populates="groups")
+
+class ProfessorRead(SQLModel):
+    """Información básica del profesor"""
+    id: str
+    first_name: str
+    last_name: str
+    email: str
+    faculty_name: str
+    campus_name: str
+
+class SubjectWithProgramRead(SQLModel):
+    """Materia con información del programa"""
+    code: str
+    name: str
+    program_code: int
+    program_name: str
+    faculty_name: str
+
+class GroupDetailRead(SQLModel):
+    """Grupo con información completa del profesor y materia"""
+    number: int
+    semester: str
+    subject_code: str
+    subject_name: str
+    professor_id: str
+    professor_name: str
+    professor_email: str
+    program_name: str
+    faculty_name: str
+
+class ProgramRead(SQLModel):
+    """Información básica del programa"""
+    code: int
+    name: str
+    area_code: int
+    area_name: str
+    faculty_name: str
+
+class FacultyRead(SQLModel):
+    """Información básica de la facultad"""
+    code: int
+    name: str
+    location: str
+    phone_number: str
+    dean_id: Optional[str] = None
+    dean_name: Optional[str] = None
+
+class CampusRead(SQLModel):
+    """Información básica del campus"""
+    code: int
+    name: Optional[str] = None
+    city_code: int
+    city_name: str
+
+##MONGODB####
+
+class Artifact(BaseModel):
+    name: str
+    grade_decimal: float
+ 
+class EvaluationPlanBase(BaseModel):
+    name: str
+    creator_id: str
+    artifacts: List[Artifact]
+
+class EvaluationPlanCreate(EvaluationPlanBase):
+    pass
+
+class EvaluationPlan(EvaluationPlanBase):
+    id: str
+
+class Derivable(BaseModel):
+    name: str
+    grade_decimal: float
+    grade_value: float
+
+class GradesBase(BaseModel):
+    user_id: str
+    min_passing: Optional [float] = None
+    derivables: List[Derivable]
+
+class GradesCreate(GradesBase):
+    pass
+
+class Grades(GradesBase):
+    id: str
+
+class CommentsBase(BaseModel):
+    commenter_id: int
+    content: str
+
+class Comments(CommentsBase):
+    id: str
+
+class CommentsCreate(CommentsBase):
+    pass
+
+class StudentBase(BaseModel):
+    first_name: str
+    last_name: str
+    username: str
+    password: str
+
+class StudentCreate(StudentBase):
+    pass
+
+
+class Student(StudentBase):
+    id: str
+
+class LoginInput(BaseModel):
+    username: str
+    password: str
