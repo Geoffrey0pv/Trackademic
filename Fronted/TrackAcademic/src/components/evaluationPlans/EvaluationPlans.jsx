@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
@@ -23,6 +23,8 @@ const EvaluationPlans = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
+  const [expandedComments, setExpandedComments] = useState({});
+
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -34,7 +36,7 @@ const EvaluationPlans = () => {
             return {
               ...p,
               title: p.name,
-              course: "Asignatura", // ajusta si tienes esta info
+              course: "Asignatura",
               comments: comments.map(c => ({
                 user: c.author || 'Anónimo',
                 text: c.content,
@@ -132,7 +134,6 @@ const EvaluationPlans = () => {
   const handleComment = async (id, text) => {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      console.log("ENVIANDO COMENTARIO:")
       await createComment(
         {
           content: text,
@@ -141,7 +142,7 @@ const EvaluationPlans = () => {
         },
         id
       );
-  
+
       const comments = await getCommentsByPlan(id);
       setPlans(plans =>
         plans.map(p =>
@@ -162,7 +163,7 @@ const EvaluationPlans = () => {
       console.error("Error posting comment:", error);
     }
   };
-  
+
   const allCourses = [...new Set(plans.map(p => p.course))];
 
   return (
@@ -224,39 +225,56 @@ const EvaluationPlans = () => {
                   </div>
 
                   <div className="mt-4 border-t pt-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                      <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" /> Comentarios
-                    </h4>
-                    {(plan.comments || []).map((comment, i) => (
-                      <div key={i} className="text-sm text-gray-700 mb-1">
-                        <strong>{comment.user}:</strong> {comment.text} <span className="text-xs text-gray-400">({comment.date})</span>
-                      </div>
-                    ))}
-                    <textarea
-                      rows={2}
-                      placeholder="Escribe un comentario..."
-                      className="w-full border border-gray-300 rounded mt-2 p-2"
-                      value={commentInputs[plan.id] || ''}
-                      onChange={(e) =>
-                        setCommentInputs((prev) => ({
-                          ...prev,
-                          [plan.id]: e.target.value,
-                        }))
-                      }
-                      onKeyDown={(e) => {
-                        console.log("tecla presionada");
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          const text = commentInputs[plan.id]?.trim();
-                          console.log("Comentando:", text); // 👈 Este log te dice si se está ejecutando
-                          if (text) {
-                            handleComment(plan.id, text);
-                            setCommentInputs((prev) => ({ ...prev, [plan.id]: '' }));
-                          }
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                        <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" /> Comentarios
+                      </h4>
+                      <button
+                        onClick={() =>
+                          setExpandedComments(prev => ({
+                            ...prev,
+                            [plan.id]: !prev[plan.id]
+                          }))
                         }
-                      }}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Presiona Enter para comentar</p>
+                        className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                      >
+                        {expandedComments[plan.id] ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
+                        {expandedComments[plan.id] ? 'Ocultar comentarios' : `Ver comentarios (${plan.comments.length || 0})`}
+                      </button>
+                    </div>
+
+                    {expandedComments[plan.id] && (
+                      <>
+                        {(plan.comments || []).map((comment, i) => (
+                          <div key={i} className="text-sm text-gray-700 mb-1">
+                            <strong>{comment.user}:</strong> {comment.text} <span className="text-xs text-gray-400">({comment.date})</span>
+                          </div>
+                        ))}
+                        <textarea
+                          rows={2}
+                          placeholder="Escribe un comentario..."
+                          className="w-full border border-gray-300 rounded mt-2 p-2"
+                          value={commentInputs[plan.id] || ''}
+                          onChange={(e) =>
+                            setCommentInputs((prev) => ({
+                              ...prev,
+                              [plan.id]: e.target.value,
+                            }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              const text = commentInputs[plan.id]?.trim();
+                              if (text) {
+                                handleComment(plan.id, text);
+                                setCommentInputs((prev) => ({ ...prev, [plan.id]: '' }));
+                              }
+                            }
+                          }}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Presiona Enter para comentar</p>
+                      </>
+                    )}
                   </div>
                 </div>
               ))
