@@ -14,30 +14,25 @@ const handleRequest = async (requestFn) => {
   }
 };
 
-
 export const getAllComments = () =>
   handleRequest(() => api.get('/comments'));
-
 
 export const getCommentById = (id) =>
   handleRequest(() => api.get(`/comments/${id}`));
 
-export const createComment = (comment, planId) =>
-  handleRequest(() =>
-    api.post(`/comments?plan_id=${planId}`, comment)
+export const createComment = (comment, planId) => {
+  console.log("▶️ Enviando comentario a backend:", { comment, planId }); // 👈 agrega este log
+  return handleRequest(() =>
+    api.post(`/comments/?plan_id=${planId}`, comment)
   );
-
+};
 export const updateComment = (id, updatedComment) =>
   handleRequest(() =>
     api.put(`/comments/${id}`, updatedComment)
   );
 
-
 export const deleteComment = (id) =>
   handleRequest(() => api.delete(`/comments/${id}`));
 
-
 export const getCommentsByPlan = (planId) =>
-  handleRequest(() =>
-    api.get(`/comments/by-plan/${planId}`)
-  );
+  handleRequest(() => api.get(`/comments/by-plan/${planId}`));

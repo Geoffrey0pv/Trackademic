@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
+from typing import Optional, List,Union
 from pydantic import BaseModel
 
 # Tablas independientes (sin foreign keys)
@@ -326,11 +326,12 @@ class Grades(GradesBase):
     id: str
 
 class CommentsBase(BaseModel):
-    commenter_id: int
     content: str
-
+    author: Optional[str] = "Anónimo"
+    commenter_id: Union[str,int]  # Aquí se guarda el ID del estudiante que comenta
 class Comments(CommentsBase):
     id: str
+    commenter_id: Union[str,int]
 
 class CommentsCreate(CommentsBase):
     pass
