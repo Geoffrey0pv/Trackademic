@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NavbarDefault from "../components/Navbar";
 import EvaluationPlans from "../components/evaluationPlans/EvaluationPlans";
 import Dashboard from "../pages/Dashboard";
+import GradeManager from "../components/grades/GradeManager"; // 👈 importamos el nuevo componente
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -20,7 +21,7 @@ const MainLayout = () => {
       case "planes":
         return <EvaluationPlans />;
       case "notas":
-        return <div className="p-8 text-gray-700 mt-40">Gestión de Notas</div>;
+        return <GradeManager />;
       case "colaborar":
         return <div className="p-8 text-gray-700 mt-40">Colaborar</div>;
       default:
