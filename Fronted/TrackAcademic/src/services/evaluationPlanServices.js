@@ -31,8 +31,8 @@ export const updateEvaluationPlan = (id, updatedPlan) =>
   handleRequest(() => api.put(`/evaluation-plans/${id}`, updatedPlan));
 
 
-export const deleteEvaluationPlan = (id) =>
-  handleRequest(() => api.delete(`/evaluation-plans/${id}`));
+export const deleteEvaluationPlan = (id,updatedPlan) =>
+  handleRequest(() => api.delete(`/evaluation-plans/${id}`,updatedPlan));
 
 export const searchEvaluationPlans = (semester, subjectId) => {
   const params = {};

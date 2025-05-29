@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 
-const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) => {
+const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects = [] }) => {
   const [title, setTitle] = useState('');
   const [course, setCourse] = useState('');
   const [components, setComponents] = useState([]);
@@ -9,10 +9,10 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) =
 
   useEffect(() => {
     if (initialData) {
-      setTitle(initialData.title);
-      setCourse(initialData.course);
+      setTitle(initialData.title || '');
+      setCourse(initialData.subject_code || '');
       setComponents(
-        initialData.components.map(c => ({
+        (initialData.components || []).map(c => ({
           name: c.name,
           weight: c.weight
         }))
@@ -30,22 +30,23 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) =
 
   const addComponent = () => {
     if (totalWeight < 100) {
-      setComponents([...components, { name: '', weight: '', count: '' }]);
+      setComponents([...components, { name: '', weight: '' }]);
     }
   };
 
   const removeComponent = (index) => {
-    const updated = components.filter((_, i) => i !== index);
-    setComponents(updated);
+    setComponents(components.filter((_, i) => i !== index));
   };
 
-  const validate = () => totalWeight === 100;
+  const validate = () => totalWeight === 100 && course;
 
   const handleSubmit = () => {
+    console.log("✅ Botón Guardar Cambios presionado");
     if (!validate()) {
-      setError('La suma de los pesos debe ser 100%.');
+      setError('Selecciona una asignatura y asegúrate de que la suma de los pesos sea 100%.');
       return;
     }
+
     setError('');
     onSubmit({
       name: title,
@@ -60,30 +61,33 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) =
   return (
     <div className="p-6 bg-white shadow rounded">
       <h2 className="text-lg font-bold mb-4">Editar Plan de Evaluación</h2>
+
       <input
         className="border p-2 mb-2 w-full"
         placeholder="Título"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
+
       <select
         className="border p-2 mb-4 w-full"
         value={course}
         onChange={(e) => setCourse(e.target.value)}
       >
         <option value="">Selecciona una asignatura</option>
-        {subjects.map((s) => (
-          <option key={s.code} value={s.code}>
-          {s.name}
-        </option>
-        ))}
+        {Array.isArray(subjects) &&
+          subjects.map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.name}
+            </option>
+          ))}
       </select>
 
       {components.map((c, i) => (
-        <div key={i} className="grid grid-cols-4 gap-2 mb-2">
+        <div key={i} className="grid grid-cols-3 gap-2 mb-2">
           <input
             className="border p-2"
-            placeholder="Nombre"
+            placeholder="Nombre del componente"
             value={c.name}
             onChange={(e) => handleChange(i, 'name', e.target.value)}
           />

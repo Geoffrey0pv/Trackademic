@@ -46,13 +46,16 @@ class EvaluationPlanService:
     
 
     async def update(self, id: str, plan: EvaluationPlanCreate) -> Optional[EvaluationPlan]:
-        updated_doc = await self.collection.find_one_and_update(
+        await self.collection.update_one(
             {"_id": to_object_id(id)},
-            {"$set": plan.model_dump(by_alias=True)},
-            return_document=True  # o ReturnDocument.AFTER si estás usando pymongo directamente
+            {"$set": plan.model_dump(by_alias=True)}
         )
-
-        return EvaluationPlan(**updated_doc) if updated_doc else None
+        updated_doc = await self.get_by_id(id)
+        
+        if updated_doc:
+            serialized = self.serialize(updated_doc, "_id")  # 👈 Convierte _id a id
+            return EvaluationPlan(**serialized)
+        return None
 
 
 
