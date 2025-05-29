@@ -11,7 +11,12 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) =
     if (initialData) {
       setTitle(initialData.title);
       setCourse(initialData.course);
-      setComponents(initialData.components);
+      setComponents(
+        initialData.components.map(c => ({
+          name: c.name,
+          weight: c.weight
+        }))
+      );
     }
   }, [initialData]);
 
@@ -88,13 +93,6 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) =
             placeholder="%"
             value={c.weight}
             onChange={(e) => handleChange(i, 'weight', e.target.value)}
-          />
-          <input
-            type="number"
-            className="border p-2"
-            placeholder="Cantidad"
-            value={c.count}
-            onChange={(e) => handleChange(i, 'count', e.target.value)}
           />
           <button onClick={() => removeComponent(i)} className="text-red-600">
             <XCircleIcon className="w-5 h-5" />
