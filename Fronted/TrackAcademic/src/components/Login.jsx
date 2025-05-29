@@ -38,6 +38,7 @@ const Login = ({ onLogin }) => {
     }
 
     setIsLoading(false);
+    navigate("/");
   };
 
   const handleChange = (e) => {

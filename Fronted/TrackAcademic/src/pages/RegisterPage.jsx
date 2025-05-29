@@ -2,19 +2,9 @@
 import Register from "../components/Register";
 
 export default function RegisterPage() {
-  const handleRegister = ({ firstName, lastName, email, password }) => {
-    console.log("Registro intentado con:", {
-      firstName,
-      lastName,
-      email,
-      password: "***" // No loggear la contraseña real por seguridad
-    });
-    
-    // Aquí puedes agregar la lógica para enviar los datos al servidor
-    // Por ejemplo:
-    // const userData = { firstName, lastName, email, password };
-    // registerUser(userData);
-  };
+  const handleRegister = (studentData) => {
+    console.log("Registro intentado con:", studentData);
+  }
 
   return (
     <div>

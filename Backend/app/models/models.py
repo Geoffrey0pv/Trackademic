@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
+from typing import Optional, List,Union
 from pydantic import BaseModel
 
 # Tablas independientes (sin foreign keys)
@@ -294,20 +294,27 @@ class CampusRead(SQLModel):
 
 ##MONGODB####
 
-class Artifact(BaseModel):
+class ArtifactBase(BaseModel):
     name: str
     grade_decimal: float
+class ArtifactCreate(ArtifactBase):
+    pass
+
+class Artifact(ArtifactBase):
+    id: Optional[str]
  
 class EvaluationPlanBase(BaseModel):
     name: str
     creator_id: str
-    artifacts: List[Artifact]
+    subject_code: Optional[str]=None
+    artifacts: List[Union[ArtifactCreate,ArtifactBase]]
 
 class EvaluationPlanCreate(EvaluationPlanBase):
     pass
 
 class EvaluationPlan(EvaluationPlanBase):
     id: str
+    
 
 class Derivable(BaseModel):
     name: str
@@ -326,11 +333,12 @@ class Grades(GradesBase):
     id: str
 
 class CommentsBase(BaseModel):
-    commenter_id: int
     content: str
-
+    author: Optional[str] = "Anónimo"
+    commenter_id: Union[str,int]  # Aquí se guarda el ID del estudiante que comenta
 class Comments(CommentsBase):
     id: str
+    commenter_id: Union[str,int]
 
 class CommentsCreate(CommentsBase):
     pass

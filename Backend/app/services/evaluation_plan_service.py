@@ -12,7 +12,9 @@ class EvaluationPlanService:
         self.collection = collection
 
     async def create(self, plan: EvaluationPlanCreate) -> EvaluationPlan:
+
         doc = plan.model_dump(by_alias=True)
+        doc["creator_id"]=ObjectId(doc["creator_id"])
         doc["created_at"] = datetime.utcnow()
         result = await self.collection.insert_one(doc)
         return self.serialize(await self.get_by_id(result.inserted_id), "_id")
@@ -59,10 +61,16 @@ class EvaluationPlanService:
     def serialize(self, doc, *fields):
         for field in fields:
             if field in doc:
-                if field.startswith("_"):
-                    doc[field[1:]] = str(doc[field])
-                    del doc[field]
-                else:
-                    doc[field] = str(doc[field])
-        return doc
+                doc[field] = str(doc[field])
+        # Asegurar que el id mongo (_id) se vuelva string y se renombre
+        if "_id" in doc:
+            doc["id"] = str(doc["_id"])
+            del doc["_id"]
 
+        # Validaciones específicas
+        if "creator_id" in doc:
+            doc["creator_id"] = str(doc["creator_id"])
+        if "subject_code" not in doc or doc["subject_code"] is None:
+            doc["subject_code"] = ""
+
+        return doc

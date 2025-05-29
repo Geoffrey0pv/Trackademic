@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { getGradesByUser } from "../../services/gradesServices";
 
 /**
  * Componente del reporte de proyección de notas

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 
-const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
+const EvaluationPlanForm = ({ onSubmit, onCancel, subjects }) => {
   const [title, setTitle] = useState('');
-  const [course, setCourse] = useState('');
-  const [components, setComponents] = useState([{ name: '', weight: '', count: '' }]);
+  const [subjectCode, setSubjectCode] = useState('');
+  const [components, setComponents] = useState([{ name: '', weight: '' }]);
   const [error, setError] = useState('');
-
+  
   const totalWeight = components.reduce((acc, curr) => acc + parseFloat(curr.weight || 0), 0);
 
   const handleChange = (index, field, value) => {
@@ -17,7 +17,7 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
 
   const addComponent = () => {
     if (totalWeight < 100) {
-      setComponents([...components, { name: '', weight: '', count: '' }]);
+      setComponents([...components, { name: '', weight: '' }]);
     }
   };
 
@@ -25,38 +25,67 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
     setComponents(components.filter((_, i) => i !== index));
   };
 
-  const validate = () => totalWeight === 100;
+  const validate = () => totalWeight === 100 && subjectCode;
 
   const handleSubmit = () => {
     if (!validate()) {
-      setError('La suma de los pesos debe ser 100%.');
+      setError('Selecciona una asignatura y asegúrate de que la suma de los pesos sea 100%.');
       return;
     }
+  
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.id) {
+      setError('No se encontró el usuario. Asegúrate de estar logueado.');
+      return;
+    }
+  
+    const payload = {
+      name: title,
+      subject_code: subjectCode, // ✅ si aún lo usas
+      creator_id: user.id,       // ✅ AHORA SE INCLUYE
+      artifacts: components.map(({ name, weight }) => ({
+        name,
+        grade_decimal: parseFloat(weight) / 100
+      }))
+    };
+  
+    console.log("PLAN ENVIADO:", payload);
+  
     setError('');
-    onSubmit({ title, course, components });
+    onSubmit(payload);
   };
+  
+  
 
   return (
     <div className="p-6 bg-white shadow rounded">
       <h2 className="text-lg font-bold mb-4">Nuevo Plan de Evaluación</h2>
+
       <input
         className="border p-2 mb-2 w-full"
         placeholder="Título"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <input
+
+      <select
         className="border p-2 mb-4 w-full"
-        placeholder="Curso"
-        value={course}
-        onChange={(e) => setCourse(e.target.value)}
-      />
+        value={subjectCode}
+        onChange={(e) => setSubjectCode(e.target.value)}
+      >
+        <option value="">Selecciona una asignatura</option>
+        {subjects.map(s => (
+          <option key={s.code} value={s.code}>
+            {s.name}
+          </option>
+        ))}
+      </select>
 
       {components.map((c, i) => (
-        <div key={i} className="grid grid-cols-4 gap-2 mb-2">
+        <div key={i} className="grid grid-cols-3 gap-2 mb-2">
           <input
             className="border p-2"
-            placeholder="Nombre"
+            placeholder="Nombre del componente"
             value={c.name}
             onChange={(e) => handleChange(i, 'name', e.target.value)}
           />
@@ -66,13 +95,6 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
             placeholder="%"
             value={c.weight}
             onChange={(e) => handleChange(i, 'weight', e.target.value)}
-          />
-          <input
-            type="number"
-            className="border p-2"
-            placeholder="Cantidad"
-            value={c.count}
-            onChange={(e) => handleChange(i, 'count', e.target.value)}
           />
           <button onClick={() => removeComponent(i)} className="text-red-600">
             <XCircleIcon className="w-5 h-5" />

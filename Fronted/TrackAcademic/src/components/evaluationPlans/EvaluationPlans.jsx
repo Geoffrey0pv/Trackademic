@@ -1,38 +1,87 @@
 import { useState, useEffect } from 'react';
-import { PencilIcon, TrashIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import {
+  PencilIcon,
+  TrashIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
+} from '@heroicons/react/24/outline';
+
 import EvaluationPlanForm from './EvaluationPlanForm';
 import EditEvaluationPlanForm from './EditEvaluationPlanForm';
 import FilterBar from './FilterBar';
+
 import {
   getEvaluationPlans,
   createEvaluationPlan,
   deleteEvaluationPlan,
-  getEvaluationPlanById,
   updateEvaluationPlan
 } from '../../services/evaluationPlanServices.js';
 
+import {
+  getCommentsByPlan,
+  createComment
+} from '../../services/commentServices.js';
+
+import { getAllSubjects } from '../../services/subjectServices.js';
+
 const EvaluationPlans = () => {
-  const [plans, setPlans] = useState([]); // ✅ Inicializado como array
+  const [plans, setPlans] = useState([]);
   const [search, setSearch] = useState('');
   const [course, setCourse] = useState('');
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(true); // Nuevo estado de carga
-
+  const [loading, setLoading] = useState(true);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [expandedComments, setExpandedComments] = useState({});
+  const [courses, setCourses] = useState([]);
+  const [coursesRaw, setCoursesRaw] = useState([]);
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchPlansAndSubjects = async () => {
       try {
-        const response = await getEvaluationPlans();
-        setPlans(response);
+        const [planRes, subjectRes] = await Promise.all([
+          getEvaluationPlans(),
+          getAllSubjects()
+        ]);
+
+        const subjectMap = subjectRes.reduce((acc, s) => {
+          acc[s.code] = s.name;
+          return acc;
+        }, {});
+
+        const mapped = await Promise.all(
+          planRes.map(async (p) => {
+            const comments = await getCommentsByPlan(p.id);
+            return {
+              ...p,
+              title: p.name,
+              course: subjectMap[p.subject_code] || 'Asignatura',
+              comments: comments.map(c => ({
+                user: c.author || 'Anónimo',
+                text: c.content,
+                date: c.created_at?.split('T')[0] || ''
+              })),
+              components: p.artifacts.map(a => ({
+                name: a.name,
+                weight: (a.grade_decimal * 100).toFixed(0),
+                count: 1
+              }))
+            };
+          })
+        );
+
+        setPlans(mapped);
+        setCourses(subjectRes.map(s => s.name));
+        setCoursesRaw(subjectRes);
       } catch (error) {
-        console.error("Error fetching evaluation plans:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPlans();
+    fetchPlansAndSubjects();
   }, []);
 
   const filteredPlans = plans.filter(p =>
@@ -44,11 +93,20 @@ const EvaluationPlans = () => {
   const handleAdd = async (plan) => {
     try {
       const newPlan = await createEvaluationPlan(plan);
-      setPlans([...plans, newPlan]);
+      setPlans([...plans, {
+        ...newPlan,
+        title: newPlan.name,
+        course: "Asignatura",
+        comments: [],
+        components: newPlan.artifacts.map(a => ({
+          name: a.name,
+          weight: (a.grade_decimal * 100).toFixed(0),
+          count: 1
+        }))
+      }]);
       setShowForm(false);
       setSelected(null);
       setEditing(false);
-      console.log("Plan added successfully:", newPlan);
     } catch (error) {
       console.error("Error adding plan:", error);
     }
@@ -60,35 +118,67 @@ const EvaluationPlans = () => {
     setShowForm(true);
   };
 
-  const handleUpdate = (updatedPlan) => {
-    setPlans(plans.map(p => (p.id === selected.id ? { ...updatedPlan, id: selected.id, comments: selected.comments } : p)));
-    setSelected(null);
-    setEditing(false);
-    setShowForm(false);
+  const handleUpdate = async (updatedPlan) => {
+    try {
+      const result = await updateEvaluationPlan(selected.id, updatedPlan);
+      const updated = {
+        ...result,
+        title: result.name,
+        course: "Asignatura",
+        comments: selected.comments || [],
+        components: result.artifacts.map(a => ({
+          name: a.name,
+          weight: (a.grade_decimal * 100).toFixed(0),
+          count: 1
+        }))
+      };
+      setPlans(plans.map(p => (p.id === selected.id ? updated : p)));
+      setSelected(null);
+      setEditing(false);
+      setShowForm(false);
+    } catch (error) {
+      console.error("Error updating plan:", error);
+    }
   };
 
-  const handleDelete = (id) => {
-    setPlans(plans.filter(p => p.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await deleteEvaluationPlan(id);
+      setPlans(plans.filter(p => p.id !== id));
+    } catch (error) {
+      console.error("Error deleting plan:", error);
+    }
   };
 
-  const handleComment = (id, text) => {
-    const updated = plans.map(p => {
-      if (p.id === id) {
-        return {
-          ...p,
-          comments: [...p.comments, {
-            user: 'Estudiante',
-            text,
-            date: new Date().toISOString().split('T')[0]
-          }]
-        };
-      }
-      return p;
-    });
-    setPlans(updated);
-  };
+  const handleComment = async (id, text) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      await createComment({
+        content: text,
+        author: user?.username || 'Anónimo',
+        commenter_id: user?.id || null,
+      }, id);
 
-  const allCourses = [...new Set(plans.map(p => p.course))];
+      const comments = await getCommentsByPlan(id);
+      setPlans(plans =>
+        plans.map(p =>
+          p.id === id
+            ? {
+                ...p,
+                comments: comments.map(c => ({
+                  user: c.author || 'Anónimo',
+                  text: c.content,
+                  date: c.created_at?.split('T')[0] || ''
+                }))
+              }
+            : p
+        )
+      );
+      setCommentInputs(prev => ({ ...prev, [id]: '' }));
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    }
+  };
 
   return (
     <div className="bg-gray from-blue-50 via-white to-white min-h-full pb-12 mt-10">
@@ -109,7 +199,7 @@ const EvaluationPlans = () => {
             course={course}
             setSearch={setSearch}
             setCourse={setCourse}
-            courses={allCourses}
+            courses={courses}
           />
 
           <div className="mt-4 space-y-6">
@@ -149,29 +239,56 @@ const EvaluationPlans = () => {
                   </div>
 
                   <div className="mt-4 border-t pt-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                      <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" /> Comentarios
-                    </h4>
-                    {plan.comments.map((comment, i) => (
-                      <div key={i} className="text-sm text-gray-700 mb-1">
-                        <strong>{comment.user}:</strong> {comment.text} <span className="text-xs text-gray-400">({comment.date})</span>
-                      </div>
-                    ))}
-                    <textarea
-                      rows={2}
-                      placeholder="Escribe un comentario..."
-                      className="w-full border border-gray-300 rounded mt-2 p-2"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          if (e.target.value.trim()) {
-                            handleComment(plan.id, e.target.value);
-                            e.target.value = '';
-                          }
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                        <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" /> Comentarios
+                      </h4>
+                      <button
+                        onClick={() =>
+                          setExpandedComments(prev => ({
+                            ...prev,
+                            [plan.id]: !prev[plan.id]
+                          }))
                         }
-                      }}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Presiona Enter para comentar</p>
+                        className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                      >
+                        {expandedComments[plan.id] ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
+                        {expandedComments[plan.id] ? 'Ocultar comentarios' : `Ver comentarios (${plan.comments.length || 0})`}
+                      </button>
+                    </div>
+
+                    {expandedComments[plan.id] && (
+                      <>
+                        {(plan.comments || []).map((comment, i) => (
+                          <div key={i} className="text-sm text-gray-700 mb-1">
+                            <strong>{comment.user}:</strong> {comment.text} <span className="text-xs text-gray-400">({comment.date})</span>
+                          </div>
+                        ))}
+                        <textarea
+                          rows={2}
+                          placeholder="Escribe un comentario..."
+                          className="w-full border border-gray-300 rounded mt-2 p-2"
+                          value={commentInputs[plan.id] || ''}
+                          onChange={(e) =>
+                            setCommentInputs((prev) => ({
+                              ...prev,
+                              [plan.id]: e.target.value,
+                            }))
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              const text = commentInputs[plan.id]?.trim();
+                              if (text) {
+                                handleComment(plan.id, text);
+                                setCommentInputs((prev) => ({ ...prev, [plan.id]: '' }));
+                              }
+                            }
+                          }}
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Presiona Enter para comentar</p>
+                      </>
+                    )}
                   </div>
                 </div>
               ))
@@ -187,12 +304,18 @@ const EvaluationPlans = () => {
               <EditEvaluationPlanForm
                 initialData={selected}
                 onSubmit={handleUpdate}
-                onCancel={() => { setShowForm(false); setSelected(null); setEditing(false); }}
+                onCancel={() => { setShowForm(false); setSelected(null); setEditing(false);
+                subjects(coursesRaw)
+                 }
+              }
+          
               />
             ) : (
               <EvaluationPlanForm
+                subjects={coursesRaw}
                 onSubmit={handleAdd}
                 onCancel={() => { setShowForm(false); setSelected(null); }}
+                
               />
             )}
           </div>

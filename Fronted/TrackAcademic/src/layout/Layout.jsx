@@ -10,6 +10,7 @@ const MainLayout = () => {
 
   const handleLogout = () => {
     navigate("/login");
+    localStorage.removeItem("user");
   };
 
   const renderTabContent = () => {
