@@ -15,21 +15,12 @@ const handleRequest = async (requestFn) => {
 };
 
 export const loginStudent = async (username, password) => {
-  try {
-    const user = await handleRequest(() =>
-      api.post('/students/login', { username, password })
-    );
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-      return user;
-    } else {
-      console.error("Error en el login:", response);
-      return null;
-    }
-  } catch (error) {
-    console.error("Error en la petición:", error);
-    return null;
-  }
+  // Ya no atrapamos aquí: propagamos el error
+  const user = await handleRequest(() =>
+    api.post('/students/login', { username, password })
+  );
+  localStorage.setItem('user', JSON.stringify(user));
+  return user;
 };
 
 export const createStudent = (student) =>

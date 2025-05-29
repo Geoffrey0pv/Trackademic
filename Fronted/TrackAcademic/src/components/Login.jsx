@@ -12,13 +12,13 @@ const Login = ({ onLogin }) => {
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     const { username, password } = formData;
-
     if (!username || !password) {
       setError("Todos los campos son obligatorios.");
       setIsLoading(false);
@@ -27,19 +27,16 @@ const Login = ({ onLogin }) => {
 
     try {
       const user = await loginStudent(username, password);
-      if (user) {
-        setUser(user);
-        onLogin({ username, password });
-      } else {
-        setError("Credenciales incorrectas.");
-      }
+      setUser(user);
+      onLogin({ username, password });
+      navigate("/");    // <-- SOLO en éxito
     } catch (err) {
-      setError("Error de conexión.");
+      setError("Error al iniciar sesión. Verifica tus credenciales.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
-    navigate("/");
   };
+
 
   const handleChange = (e) => {
     setFormData({
