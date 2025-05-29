@@ -21,7 +21,7 @@ export const getCommentById = (id) =>
   handleRequest(() => api.get(`/comments/${id}`));
 
 export const createComment = (comment, planId) => {
-  console.log("▶️ Enviando comentario a backend:", { comment, planId }); // 👈 agrega este log
+  console.log("Enviando comentario a backend:", { comment, planId }); 
   return handleRequest(() =>
     api.post(`/comments/?plan_id=${planId}`, comment)
   );

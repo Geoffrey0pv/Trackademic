@@ -294,20 +294,27 @@ class CampusRead(SQLModel):
 
 ##MONGODB####
 
-class Artifact(BaseModel):
+class ArtifactBase(BaseModel):
     name: str
     grade_decimal: float
+class ArtifactCreate(ArtifactBase):
+    pass
+
+class Artifact(ArtifactBase):
+    id: Optional[str]
  
 class EvaluationPlanBase(BaseModel):
     name: str
     creator_id: str
-    artifacts: List[Artifact]
+    subject_code: Optional[str]=None
+    artifacts: List[Union[ArtifactCreate,ArtifactBase]]
 
 class EvaluationPlanCreate(EvaluationPlanBase):
     pass
 
 class EvaluationPlan(EvaluationPlanBase):
     id: str
+    
 
 class Derivable(BaseModel):
     name: str

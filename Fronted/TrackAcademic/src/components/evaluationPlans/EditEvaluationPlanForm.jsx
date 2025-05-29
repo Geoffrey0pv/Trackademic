@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
 
-const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel }) => {
+const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel, subjects }) => {
   const [title, setTitle] = useState('');
   const [course, setCourse] = useState('');
   const [components, setComponents] = useState([]);
@@ -42,7 +42,14 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel }) => {
       return;
     }
     setError('');
-    onSubmit({ title, course, components });
+    onSubmit({
+      name: title,
+      subject_code: course,
+      artifacts: components.map(({ name, weight }) => ({
+        name,
+        grade_decimal: parseFloat(weight) / 100
+      }))
+    });
   };
 
   return (
@@ -54,12 +61,18 @@ const EditEvaluationPlanForm = ({ initialData, onSubmit, onCancel }) => {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
-      <input
+      <select
         className="border p-2 mb-4 w-full"
-        placeholder="Curso"
         value={course}
         onChange={(e) => setCourse(e.target.value)}
-      />
+      >
+        <option value="">Selecciona una asignatura</option>
+        {subjects.map((s) => (
+          <option key={s.code} value={s.code}>
+          {s.name}
+        </option>
+        ))}
+      </select>
 
       {components.map((c, i) => (
         <div key={i} className="grid grid-cols-4 gap-2 mb-2">

@@ -1,31 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { XCircleIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
-import { getAllSubjects } from '../../services/subjectServices.js';
 
-const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
+const EvaluationPlanForm = ({ onSubmit, onCancel, subjects }) => {
   const [title, setTitle] = useState('');
   const [subjectCode, setSubjectCode] = useState('');
-  const [subjects, setSubjects] = useState([]);
   const [components, setComponents] = useState([{ name: '', weight: '' }]);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      try {
-        const res = await getAllSubjects();
-        setSubjects(res);
-      } catch (error) {
-        console.error('Error cargando materias:', error);
-      }
-    };
-
-    fetchSubjects();
-  }, []);
-
-  const totalWeight = components.reduce(
-    (acc, curr) => acc + parseFloat(curr.weight || 0),
-    0
-  );
+  
+  const totalWeight = components.reduce((acc, curr) => acc + parseFloat(curr.weight || 0), 0);
 
   const handleChange = (index, field, value) => {
     const updated = [...components];
@@ -43,22 +25,37 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
     setComponents(components.filter((_, i) => i !== index));
   };
 
-  const validate = () => {
-    return totalWeight === 100 && subjectCode;
-  };
+  const validate = () => totalWeight === 100 && subjectCode;
 
   const handleSubmit = () => {
     if (!validate()) {
-      setError('La suma de los pesos debe ser 100% y debe seleccionar una materia.');
+      setError('Selecciona una asignatura y asegúrate de que la suma de los pesos sea 100%.');
       return;
     }
+  
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || !user.id) {
+      setError('No se encontró el usuario. Asegúrate de estar logueado.');
+      return;
+    }
+  
+    const payload = {
+      name: title,
+      subject_code: subjectCode, // ✅ si aún lo usas
+      creator_id: user.id,       // ✅ AHORA SE INCLUYE
+      artifacts: components.map(({ name, weight }) => ({
+        name,
+        grade_decimal: parseFloat(weight) / 100
+      }))
+    };
+  
+    console.log("PLAN ENVIADO:", payload);
+  
     setError('');
-    onSubmit({
-      title,
-      subject_code: subjectCode,
-      components
-    });
+    onSubmit(payload);
   };
+  
+  
 
   return (
     <div className="p-6 bg-white shadow rounded">
@@ -66,7 +63,7 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
 
       <input
         className="border p-2 mb-2 w-full"
-        placeholder="Título del plan"
+        placeholder="Título"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
@@ -76,8 +73,8 @@ const EvaluationPlanForm = ({ onSubmit, onCancel }) => {
         value={subjectCode}
         onChange={(e) => setSubjectCode(e.target.value)}
       >
-        <option value="">Seleccione una materia</option>
-        {subjects.map((s) => (
+        <option value="">Selecciona una asignatura</option>
+        {subjects.map(s => (
           <option key={s.code} value={s.code}>
             {s.name}
           </option>

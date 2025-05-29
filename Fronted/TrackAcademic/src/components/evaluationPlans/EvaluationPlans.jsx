@@ -36,7 +36,7 @@ const EvaluationPlans = () => {
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
   const [courses, setCourses] = useState([]);
-
+  const [coursesRaw, setCoursesRaw] = useState([]);
   useEffect(() => {
     const fetchPlansAndSubjects = async () => {
       try {
@@ -73,6 +73,7 @@ const EvaluationPlans = () => {
 
         setPlans(mapped);
         setCourses(subjectRes.map(s => s.name));
+        setCoursesRaw(subjectRes);
       } catch (error) {
         console.error("Error al cargar datos:", error);
       } finally {
@@ -303,12 +304,18 @@ const EvaluationPlans = () => {
               <EditEvaluationPlanForm
                 initialData={selected}
                 onSubmit={handleUpdate}
-                onCancel={() => { setShowForm(false); setSelected(null); setEditing(false); }}
+                onCancel={() => { setShowForm(false); setSelected(null); setEditing(false);
+                subjects(coursesRaw)
+                 }
+              }
+          
               />
             ) : (
               <EvaluationPlanForm
+                subjects={coursesRaw}
                 onSubmit={handleAdd}
                 onCancel={() => { setShowForm(false); setSelected(null); }}
+                
               />
             )}
           </div>
