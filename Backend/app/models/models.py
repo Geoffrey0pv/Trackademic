@@ -319,11 +319,12 @@ class EvaluationPlan(EvaluationPlanBase):
 class Derivable(BaseModel):
     name: str
     grade_decimal: float
-    grade_value: float
+    grade_value: Optional[float]
 
 class GradesBase(BaseModel):
     user_id: str
-    min_passing: Optional [float] = None
+    evaluation_plan_id: str 
+    min_passing: Optional [float] = 3.0
     derivables: List[Derivable]
 
 class GradesCreate(GradesBase):

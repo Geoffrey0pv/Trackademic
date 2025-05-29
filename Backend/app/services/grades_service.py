@@ -1,28 +1,35 @@
-# app/services/grades_service.py
-
 from typing import List, Optional
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorCollection
 from datetime import datetime
+from motor.motor_asyncio import AsyncIOMotorCollection
+
 from app.models.models import Grades, GradesCreate
 from app.utils.mongo_helpers import to_object_id
-from app.db.database import mongo_db  # para access a evaluationPlan
+from app.db.database import mongo_db  # acceso a evaluationPlan
+
 
 class GradesService:
     def __init__(self, collection: AsyncIOMotorCollection):
         self.collection = collection
-        self.plans = mongo_db["evaluationPlan"]  # relación manual
+        self.plans = mongo_db["evaluationPlan"]
+
+    def serialize(self, doc, *fields):
+        for field in fields:
+            if field in doc:
+                doc[field.lstrip('_')] = str(doc[field])
+        return doc
 
     async def create(self, grade: GradesCreate) -> Grades:
         doc = grade.model_dump(by_alias=True)
         doc["created_at"] = datetime.utcnow()
+        doc["evaluation_plan_id"] = to_object_id(doc["evaluation_plan_id"])
+        doc["user_id"] = to_object_id(doc["user_id"])
         result = await self.collection.insert_one(doc)
-        return self.serialize(await self.get_by_id(result.inserted_id), "_id", "user_id")
+        return self.serialize(await self.get_by_id(result.inserted_id), "_id", "user_id", "evaluation_plan_id")
 
     async def get_all(self) -> List[Grades]:
         cursor = self.collection.find()
         return [self.serialize(doc, "_id", "user_id") async for doc in cursor]
-    
 
     async def get_by_id(self, id: str | ObjectId) -> Optional[Grades]:
         doc = await self.collection.find_one({"_id": to_object_id(id)})
@@ -48,24 +55,21 @@ class GradesService:
         if not doc:
             return None
 
-        derivables = doc["derivables"]
-        min_passing = doc["min_passing"]
+        completed = [d["grade_value"] for d in doc["derivables"]]
+        weights = [d["grade_decimal"] for d in doc["derivables"]]
+        total_weight = sum(weights)
+        weighted_sum = sum(g * w for g, w in zip(completed, weights))
+        remaining = 1.0 - total_weight
 
-        completed = [d["grade_value"] for d in derivables]
-        weights = [d["grade_decimal"] for d in derivables]
-        completed_sum = sum(g * w for g, w in zip(completed, weights))
-        remaining_weights = 1.0 - sum(weights)
-
-        if remaining_weights <= 0:
+        if remaining <= 0:
             return {"needed": "Completado"}
 
-        needed = (min_passing - completed_sum) / remaining_weights
+        needed = (doc.get("min_passing", 3.0) - weighted_sum) / remaining
         return {"needed": "Imposible" if needed > 5 else round(max(0, needed), 1)}
 
     async def get_semester_consolidate(self, user_id: str, semester: str):
         cursor = self.collection.find({"user_id": to_object_id(user_id)})
-        total = 0
-        subjects = []
+        subjects, total = [], 0
 
         async for doc in cursor:
             plan = await self.plans.find_one({
@@ -73,11 +77,10 @@ class GradesService:
                 "semester": semester
             })
             if plan:
-                derivables = doc["derivables"]
-                weights = [d["grade_decimal"] for d in derivables]
-                grades = [d["grade_value"] for d in derivables]
-                used_weights = sum(weights)
-                avg = sum(g * w for g, w in zip(grades, weights)) / used_weights if used_weights > 0 else 0
+                grades = [d["grade_value"] for d in doc["derivables"]]
+                weights = [d["grade_decimal"] for d in doc["derivables"]]
+                if not grades: continue
+                avg = sum(g * w for g, w in zip(grades, weights)) / sum(weights)
                 subjects.append({"subject_id": doc["subject_id"], "average": round(avg, 1)})
                 total += avg
 
@@ -88,59 +91,36 @@ class GradesService:
 
     async def comparative_analysis(self, user_id: str):
         cursor = self.collection.find({"user_id": to_object_id(user_id)})
-        data_by_semester = {}
+        data = {}
 
         async for doc in cursor:
             semester = doc.get("semester")
-            min_passing = doc.get("min_passing", 3.0)
-            derivables = doc.get("derivables", [])
+            if not semester: continue
 
-            if not semester:
-                continue
+            grades = [d["grade_value"] for d in doc["derivables"]]
+            weights = [d["grade_decimal"] for d in doc["derivables"]]
+            if not grades or not weights: continue
 
-            grades = [d["grade_value"] for d in derivables]
-            weights = [d["grade_decimal"] for d in derivables]
+            avg = sum(g * w for g, w in zip(grades, weights)) / sum(weights)
+            passed = avg >= doc.get("min_passing", 3.0)
 
-            if not grades or not weights:
-                continue
+            if semester not in data:
+                data[semester] = {"total_avg": 0, "subjects": 0, "passed": 0}
 
-            weighted_sum = sum(g * w for g, w in zip(grades, weights))
-            total_weight = sum(weights)
-            average = weighted_sum / total_weight if total_weight > 0 else 0.0
-            passed = average >= min_passing
-
-            if semester not in data_by_semester:
-                data_by_semester[semester] = {
-                    "semester": semester,
-                    "total_avg": 0.0,
-                    "subjects": 0,
-                    "passed": 0
-                }
-
-            data_by_semester[semester]["total_avg"] += average
-            data_by_semester[semester]["subjects"] += 1
-            if passed:
-                data_by_semester[semester]["passed"] += 1
+            data[semester]["total_avg"] += avg
+            data[semester]["subjects"] += 1
+            data[semester]["passed"] += int(passed)
 
         return [
             {
                 "semester": sem,
-                "average": round(data["total_avg"] / data["subjects"], 2),
-                "subjects": data["subjects"],
+                "average": round(v["total_avg"] / v["subjects"], 2),
+                "subjects": v["subjects"],
                 "progress": {
-                    "passed": data["passed"],
-                    "total": data["subjects"],
-                    "percentage": round((data["passed"] / data["subjects"]) * 100)
+                    "passed": v["passed"],
+                    "total": v["subjects"],
+                    "percentage": round((v["passed"] / v["subjects"]) * 100)
                 }
             }
-            for sem, data in data_by_semester.items()
+            for sem, v in data.items()
         ]
-
-    def serialize(self, doc, *fields):
-        for field in fields:
-            if field in doc:
-                if field.startswith("_"):
-                    doc[field[1:]] = str(doc[field])
-                else:
-                    doc[field] = str(doc[field])
-        return doc
