@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import NavbarDefault from "../components/Navbar";
 import EvaluationPlans from "../components/evaluationPlans/EvaluationPlans";
 import Dashboard from "../pages/Dashboard";
-import GradeManager from "../components/grades/GradeManager"; // 👈 importamos el nuevo componente
+import GradeManager from "../components/grades/GradeFormModal";
 
 const MainLayout = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
