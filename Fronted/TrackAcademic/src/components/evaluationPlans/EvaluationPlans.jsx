@@ -142,6 +142,9 @@ const EvaluationPlans = () => {
   };
 
   const handleDelete = async (id) => {
+    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar este plan?");
+    if (!confirmed) return;
+  
     try {
       await deleteEvaluationPlan(id);
       setPlans(plans.filter(p => p.id !== id));
