@@ -46,11 +46,15 @@ class EvaluationPlanService:
     
 
     async def update(self, id: str, plan: EvaluationPlanCreate) -> Optional[EvaluationPlan]:
-        await self.collection.update_one(
+        updated_doc = await self.collection.find_one_and_update(
             {"_id": to_object_id(id)},
-            {"$set": plan.model_dump(by_alias=True)}
+            {"$set": plan.model_dump(by_alias=True)},
+            return_document=True  # o ReturnDocument.AFTER si estás usando pymongo directamente
         )
-        return await self.get_by_id(id)
+
+        return EvaluationPlan(**updated_doc) if updated_doc else None
+
+
 
 
     async def delete(self, id: str) -> bool:
