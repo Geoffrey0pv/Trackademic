@@ -120,7 +120,12 @@ const EvaluationPlans = () => {
 
   const handleUpdate = async (updatedPlan) => {
     try {
-      const result = await updateEvaluationPlan(selected.id, updatedPlan);
+      const user = JSON.parse(localStorage.getItem('user'));
+      const result = await updateEvaluationPlan(selected.id, {
+        ...updatedPlan,
+        creator_id: user?.id // ✅ Incluye el creator_id que es requerido
+      });
+  
       const updated = {
         ...result,
         title: result.name,
@@ -128,10 +133,10 @@ const EvaluationPlans = () => {
         comments: selected.comments || [],
         components: result.artifacts.map(a => ({
           name: a.name,
-          weight: (a.grade_decimal * 100).toFixed(0),
-          count: 1
+          weight: (a.grade_decimal * 100).toFixed(0)
         }))
       };
+  
       setPlans(plans.map(p => (p.id === selected.id ? updated : p)));
       setSelected(null);
       setEditing(false);
@@ -140,6 +145,7 @@ const EvaluationPlans = () => {
       console.error("Error updating plan:", error);
     }
   };
+  
 
   const handleDelete = async (id) => {
     const confirmed = window.confirm("¿Estás seguro de que deseas eliminar este plan?");
@@ -307,8 +313,9 @@ const EvaluationPlans = () => {
               <EditEvaluationPlanForm
                 initialData={selected}
                 onSubmit={handleUpdate}
+                subjects={coursesRaw}
                 onCancel={() => { setShowForm(false); setSelected(null); setEditing(false);
-                subjects(coursesRaw)
+                
                  }
               }
           
